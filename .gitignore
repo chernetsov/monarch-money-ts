@@ -6,4 +6,9 @@ monarch
 # Environment files
 .env
 
+# Test token cache
+.tests-cached-token.json
+
 /traffic/*
+
+/dist
