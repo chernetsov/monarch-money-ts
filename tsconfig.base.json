@@ -8,11 +8,6 @@
     "strict": true,
     "skipLibCheck": true,
     "forceConsistentCasingInFileNames": true,
-    "declaration": true,
-    "declarationMap": true,
-    "sourceMap": true,
-    "outDir": "./dist",
-    "rootDir": "./src",
     "resolveJsonModule": true,
     "allowImportingTsExtensions": false,
     "noEmit": false,
@@ -20,14 +15,5 @@
     "verbatimModuleSyntax": false,
     "lib": ["ES2022", "DOM"],
     "types": ["node", "vitest/globals"]
-  },
-  "include": [
-    "src/**/*"
-  ],
-  "exclude": [
-    "node_modules",
-    "dist",
-    "**/*.test.ts",
-    "**/*.spec.ts"
-  ]
-} 
+  }
+}

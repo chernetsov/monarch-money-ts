@@ -4,5 +4,6 @@ export * from './common-types.js';
 export * from './accounts.js';
 export * from './transactions.js';
 export * from './graphql.js';
+export * from './test-utils.js';
 
 

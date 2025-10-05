@@ -7,5 +7,6 @@ export default defineConfig({
     include: ['src/**/*.int.test.ts'],
     exclude: ['node_modules', 'dist', '.git'],
     sequence: { concurrent: false },
+    maxWorkers: 1,
   },
 })

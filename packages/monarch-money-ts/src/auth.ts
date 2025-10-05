@@ -110,23 +110,6 @@ const loginRequest = async (params: LoginParams): Promise<LoginResponse> => {
  */
 export type TokenUpdateCallback = (token: string, tokenExpiresAtMs: number | undefined) => void | Promise<void>;
 
-const maskEmail = (email: string): string => {
-  const [user, domain] = email.split('@');
-  if (!domain) return '***';
-  if (user.length <= 2) return `${user[0] ?? ''}***@${domain}`;
-  return `${user.substring(0, 2)}***@${domain}`;
-};
-
-const maskToken = (token: string | undefined): string => {
-  if (!token || token.length < 8) return '***';
-  return `${token.substring(0, 4)}***${token.substring(token.length - 4)}`;
-};
-
-const authLog = (message: string, details?: Record<string, unknown>): void => {
-  const payload = details ? ` ${JSON.stringify(details)}` : '';
-  console.log(`[auth] ${message}${payload}`);
-};
-
 /**
  * EmailPasswordAuthProvider logs in via username/password and optional TOTP key.
  * It caches the retrieved token until invalidated.
@@ -160,57 +143,26 @@ export class EmailPasswordAuthProvider implements AuthProvider {
     this.token = token;
     this.tokenExpiresAtMs = tokenExpiresAtMs;
     this.onTokenUpdate = onTokenUpdate;
-    authLog('initialized provider', {
-      email: maskEmail(email),
-      hasTotp: Boolean(totpKey),
-      hasInitialToken: Boolean(token),
-      tokenExpiresAtMs,
-    });
   }
 
   private isTokenValid(): boolean {
     if (!this.token) return false;
-    if (!this.tokenExpiresAtMs) {
-      authLog('cached token has no expiration; treating as valid', {
-        email: maskEmail(this.email),
-      });
-      return true;
-    }
+    if (!this.tokenExpiresAtMs) return true;
     const now = Date.now();
     const valid = now + this.refreshSkewMs < this.tokenExpiresAtMs;
-    if (!valid) {
-      authLog('cached token expiring soon or expired', {
-        email: maskEmail(this.email),
-        tokenExpiresAtMs: this.tokenExpiresAtMs,
-        now,
-      });
-    }
     return valid;
     }
 
   async getToken(): Promise<string> {
     if (this.isTokenValid()) {
-      authLog('reusing cached token', {
-        email: maskEmail(this.email),
-        token: maskToken(this.token),
-        expiresInMs: this.tokenExpiresAtMs ? this.tokenExpiresAtMs - Date.now() : null,
-      });
       return this.token as string;
     }
-
-    authLog('attempting login for new token', {
-      email: maskEmail(this.email),
-    });
 
     let totpCode: string | undefined;
     if (this.totpKey) {
       try {
         const generated = await TOTP.generate(this.totpKey);
         totpCode = generated.otp;
-        authLog('generated TOTP code', {
-          email: maskEmail(this.email),
-          expiresInSeconds: generated.expires,
-        });
       } catch (e) {
         throw new Error(`Failed to generate TOTP: ${e instanceof Error ? e.message : 'Unknown error'}`);
       }
@@ -226,10 +178,6 @@ export class EmailPasswordAuthProvider implements AuthProvider {
     if (!Number.isNaN(expiresAt)) {
       this.tokenExpiresAtMs = expiresAt;
     } else {
-      authLog('failed to parse token expiration', {
-        email: maskEmail(this.email),
-        rawExpiration: login.tokenExpiration,
-      });
       this.tokenExpiresAtMs = undefined;
     }
     
@@ -237,11 +185,6 @@ export class EmailPasswordAuthProvider implements AuthProvider {
     if (this.onTokenUpdate) {
       await this.onTokenUpdate(this.token, this.tokenExpiresAtMs);
     }
-    authLog('obtained new token', {
-      email: maskEmail(this.email),
-      token: maskToken(this.token),
-      tokenExpiresAtMs: this.tokenExpiresAtMs,
-    });
     
     return login.token;
   }
@@ -249,9 +192,6 @@ export class EmailPasswordAuthProvider implements AuthProvider {
   async invalidate(): Promise<void> {
     this.token = undefined;
     this.tokenExpiresAtMs = undefined;
-    authLog('token invalidated', {
-      email: maskEmail(this.email),
-    });
   }
 }
 

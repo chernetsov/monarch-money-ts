@@ -7,11 +7,6 @@ export class MonarchGraphQLClient {
 
   private readonly client: GraphQLClient;
 
-  private graphqlLog(message: string, details?: Record<string, unknown>): void {
-    const payload = details ? ` ${JSON.stringify(details)}` : '';
-    console.log(`[graphql] ${message}${payload}`);
-  }
-
   constructor(endpoint: string = "https://api.monarchmoney.com/graphql") {
     this.client = new GraphQLClient(endpoint);
   }
@@ -36,30 +31,22 @@ export class MonarchGraphQLClient {
     try {
       const token = await auth.getToken();
       const headers = buildAuthHeaders(token);
-      this.graphqlLog('request', { query: singleLineQuery(query), variables });
       const raw = await this.client.request<any>(query, variables as any, headers);
       const data = schema.parse(raw);
       return data as T;
     } catch (err) {
       if (this.isAuthError(err)) {
         try {
-          this.graphqlLog('auth error detected, retrying request', formatGraphQLError(err));
           await auth.invalidate();
           const token = await auth.getToken();
           const headers = buildAuthHeaders(token);
-          this.graphqlLog('request retry', { query: singleLineQuery(query), variables });
           const raw = await this.client.request<any>(query, variables as any, headers);
           const data = schema.parse(raw);
           return data as T;
         } catch (retryErr) {
-          this.graphqlLog('retry after auth error failed', {
-            originalError: formatGraphQLError(err),
-            retryError: formatGraphQLError(retryErr),
-          });
           throw this.wrapError(retryErr);
         }
       }
-      this.graphqlLog('request failed', formatGraphQLError(err));
       throw this.wrapError(err);
     }
   }
@@ -81,15 +68,3 @@ export class MonarchGraphQLClient {
   }
   
 }
-
-const singleLineQuery = (query: string): string => query.replace(/\s+/g, ' ').trim();
-
-const formatGraphQLError = (err: unknown): Record<string, unknown> => {
-  const anyErr = err as any;
-  const response = anyErr?.response;
-  return {
-    message: anyErr?.message,
-    status: response?.status ?? response?.http?.status,
-    errors: response?.errors,
-  };
-};

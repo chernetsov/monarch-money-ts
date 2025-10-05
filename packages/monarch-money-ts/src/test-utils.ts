@@ -1,7 +1,30 @@
-import 'dotenv/config'
+import { config as loadEnv } from 'dotenv'
+import { existsSync, readFileSync, writeFileSync } from 'node:fs'
+import { dirname, resolve } from 'node:path'
+import { fileURLToPath } from 'node:url'
 import { EmailPasswordAuthProvider } from './auth.js'
 import { MonarchGraphQLClient } from './graphql.js'
-import { existsSync, readFileSync, writeFileSync } from 'node:fs'
+
+const __filename = fileURLToPath(import.meta.url)
+const __dirname = dirname(__filename)
+
+const envCandidates = [
+  resolve(__dirname, '../../..', '.env'),
+  resolve(__dirname, '..', '.env')
+]
+
+let envLoaded = false
+for (const candidate of envCandidates) {
+  if (existsSync(candidate)) {
+    loadEnv({ path: candidate })
+    envLoaded = true
+    break
+  }
+}
+
+if (!envLoaded) {
+  loadEnv()
+}
 
 export interface IntegrationContext {
   auth: EmailPasswordAuthProvider;
@@ -16,36 +39,18 @@ interface TokenCache {
 
 const TOKEN_CACHE_FILE = '.tests-cached-token.json';
 
-const testLog = (message: string, details?: Record<string, unknown>): void => {
-  const payload = details ? ` ${JSON.stringify(details)}` : '';
-  console.log(`[tests] ${message}${payload}`);
-};
-
 const loadTokenCache = (email: string): Pick<TokenCache, 'token' | 'tokenExpiresAtMs'> | null => {
   try {
     if (!existsSync(TOKEN_CACHE_FILE)) {
-      testLog('token cache file not found');
       return null;
     }
     const data = readFileSync(TOKEN_CACHE_FILE, 'utf-8');
     const cache = JSON.parse(data) as TokenCache;
     if (cache.email === email) {
-      testLog('loaded token from cache', {
-        email,
-        hasToken: Boolean(cache.token),
-        tokenExpiresAtMs: cache.tokenExpiresAtMs,
-      });
       return { token: cache.token, tokenExpiresAtMs: cache.tokenExpiresAtMs };
     }
-    testLog('token cache email mismatch', {
-      cacheEmail: cache.email,
-      requestedEmail: email,
-    });
   } catch (e) {
     // Ignore errors and proceed without cache
-    testLog('failed to load token cache', {
-      error: e instanceof Error ? e.message : String(e),
-    });
   }
   return null;
 };
@@ -54,16 +59,8 @@ const saveTokenCache = (email: string, token: string, tokenExpiresAtMs: number |
   try {
     const cache: TokenCache = { email, token, tokenExpiresAtMs };
     writeFileSync(TOKEN_CACHE_FILE, JSON.stringify(cache, null, 2), 'utf-8');
-    testLog('saved token cache', {
-      email,
-      hasToken: Boolean(token),
-      tokenExpiresAtMs,
-    });
   } catch (e) {
     // Ignore save errors
-    testLog('failed to save token cache', {
-      error: e instanceof Error ? e.message : String(e),
-    });
   }
 };
 
@@ -89,11 +86,6 @@ export const getIntegrationContext = (): IntegrationContext => {
     token: cachedToken?.token,
     tokenExpiresAtMs: cachedToken?.tokenExpiresAtMs,
     onTokenUpdate: (token, tokenExpiresAtMs) => {
-      testLog('onTokenUpdate invoked', {
-        email,
-        hasToken: Boolean(token),
-        tokenExpiresAtMs,
-      });
       saveTokenCache(email, token, tokenExpiresAtMs);
     }
   });

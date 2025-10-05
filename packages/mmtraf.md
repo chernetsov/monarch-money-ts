@@ -1,6 +1,6 @@
 ## mmtraf — Monarch Money traffic analyzer
 
-Runs from traffic logs captured as JSON under the `traffic/` directory. Best used with pnpm.
+Runs from traffic logs captured as JSON under the `traffic/` directory inside `packages/monarch-money-ts`. Best used with pnpm.
 
 ### Run
 
