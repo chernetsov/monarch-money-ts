@@ -20,6 +20,9 @@ importers:
       '@modelcontextprotocol/sdk':
         specifier: ^1.19.1
         version: 1.19.1
+      dotenv:
+        specifier: ^17.2.0
+        version: 17.2.0
       monarch-money-ts:
         specifier: workspace:*
         version: link:../monarch-money-ts

@@ -6,8 +6,12 @@
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
   "files": [
-    "dist"
+    "dist",
+    "bin"
   ],
+  "bin": {
+    "monarch-money-mcp": "bin/monarch-money-mcp.js"
+  },
   "scripts": {
     "build": "tsc -p tsconfig.json",
     "clean": "rm -rf dist",
@@ -16,6 +20,7 @@
   },
   "dependencies": {
     "@modelcontextprotocol/sdk": "^1.19.1",
+    "dotenv": "^17.2.0",
     "monarch-money-ts": "workspace:*",
     "zod": "^3.25.76"
   },
