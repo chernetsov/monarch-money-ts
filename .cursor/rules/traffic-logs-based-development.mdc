@@ -13,21 +13,36 @@ First see the list of files using `list`, then use `summary` to find the request
 
 When building APIs after looking at requests and responses, follow the following rules and conventions:
 
-- **api.ts (domain API modules)**:
+- **File naming convention**:
+  - `*.types.ts` for domain schema modules (e.g., `accounts.types.ts`, `transactions.types.ts`)
+  - `*.api.ts` for domain API modules (e.g., `accounts.api.ts`, `transactions.api.ts`)
+  - `common.types.ts` for shared summary types used across domains
+
+- ***.api.ts (domain API modules)**:
   - **Auth and client**: API functions accept `auth: AuthProvider` and `client: MonarchGraphQLClient` as the first params.
   - **Function names**: Prefer descriptive verbs like `getAccounts(auth, client, filters?)`.
   - **GraphQL**: Use `gql` tagged templates and pass variables (e.g., `$filters: AccountFilters`) instead of hardcoding filters.
-  - **Parsing**: Always validate GraphQL responses with a Zod schema from the corresponding `types.ts` and return the parsed, typed data (not raw `data`).
+  - **Field selection**: Import `*_FIELDS` constants from types files and interpolate into queries (e.g., `${TRANSACTION_FIELDS}`).
+  - **Parsing**: Always validate GraphQL responses with a Zod schema from the corresponding `*.types.ts` and return the parsed, typed data (not raw `data`).
   - **Error handling**: Rely on `MonarchGraphQLClient` to handle auth retries and wrap errors; do not silently coerce.
-  - **Exports**: Re-export from `src/new/index.ts` to provide a stable surface.
+  - **Exports**: Re-export from `src/index.ts` to provide a stable surface.
 
-- **types.ts (domain schema modules, e.g., accounts-types.ts)**:
+- ***.types.ts (domain schema modules)**:
   - **Zod strictness**: Use `.strict()` on object schemas to catch unexpected fields.
   - **Nullability**: Express nullability at the property level using `.nullable()`; avoid schema-level nullability and avoid silent coercion (no `.catch(undefined)`).
   - **Optional vs nullable**: Reserve `.optional()` for genuinely omitted fields; prefer `z.string().nullable()` for optional text that may be `null` in responses.
   - **Variability**: For highly variable sub-objects (e.g., `plaidStatus`), use `z.unknown().optional()` and refine later if needed.
   - **Types**: Export both the Zod schemas and `z.infer<>` TypeScript types for consumers.
   - **Inputs**: Define input types (e.g., `AccountFiltersInput`) to mirror traffic-observed filters without over-fitting.
+  - **Full types vs Summary types**: 
+    - **Full types** live in domain `*.types.ts` files (e.g., `Account`, `BudgetCategory`) and are returned by dedicated APIs.
+    - **Summary types** are lightweight versions embedded in other responses (e.g., `AccountSummary`, `CategorySummary`).
+    - Name summaries with `*Summary` suffix to signal they're lightweight.
+    - Place summaries in `common.types.ts` if reused across domains.
+    - Add a docstring on summary types pointing to the full-detail API function.
+  - **Field constants**: Define `*_FIELDS` constants next to each schema for GraphQL field selection.
+    - Nested schemas compose via template interpolation (e.g., `category { ${CATEGORY_SUMMARY_FIELDS} }`).
+    - This ensures schema and query stay in sync.
 
 - **int.test.ts (integration tests)**:
   - **Setup**: Use `getIntegrationContext()` from `src/new/test-utils.ts` to obtain `auth` and `client`.

@@ -1,6 +1,8 @@
 import { describe, it, expect } from 'vitest'
 import { getIntegrationContext } from './test-utils.js'
-import { getTransactions } from './transactions.js'
+import { getTransactions, updateTransactionCategory } from './transactions.api.js'
+import { getBudgetCategories } from './categories.api.js'
+import { MonarchMutationError, MonarchGraphQLError } from './common.types.js'
 
 describe('integration: transactions', () => {
   it('gets transactions (no filters)', async () => {
@@ -69,6 +71,79 @@ describe('integration: transactions', () => {
       expect(txn.category).toHaveProperty('icon')
       expect(Array.isArray(txn.tags)).toBe(true)
       expect(Array.isArray(txn.attachments)).toBe(true)
+    }
+  })
+
+  it('updates transaction category', async () => {
+    const { auth, client } = getIntegrationContext()
+
+    // Get a transaction to update
+    const txnResult = await getTransactions(auth, client, { limit: 1 })
+    expect(txnResult.transactions.length).toBeGreaterThan(0)
+    const txn = txnResult.transactions[0]
+    const originalCategoryId = txn.category.id
+
+    // Get categories to find a different one
+    const { categories } = await getBudgetCategories(auth, client)
+    const differentCategory = categories.find(c => c.id !== originalCategoryId && !c.isDisabled)
+    expect(differentCategory).toBeDefined()
+
+    // Update to a different category
+    const updated = await updateTransactionCategory(auth, client, {
+      id: txn.id,
+      categoryId: differentCategory!.id
+    })
+
+    expect(updated.id).toBe(txn.id)
+    expect(updated.category.id).toBe(differentCategory!.id)
+    expect(updated.category.name).toBe(differentCategory!.name)
+    expect(updated).toHaveProperty('amount')
+    expect(updated).toHaveProperty('merchant')
+    expect(updated).toHaveProperty('account')
+
+    // Restore original category
+    const restored = await updateTransactionCategory(auth, client, {
+      id: txn.id,
+      categoryId: originalCategoryId
+    })
+
+    expect(restored.category.id).toBe(originalCategoryId)
+  })
+
+  it('throws MonarchGraphQLError for invalid category', async () => {
+    const { auth, client } = getIntegrationContext()
+
+    // Get a transaction to attempt to update
+    const txnResult = await getTransactions(auth, client, { limit: 1 })
+    expect(txnResult.transactions.length).toBeGreaterThan(0)
+    const txn = txnResult.transactions[0]
+
+    // Try to update with a non-existent category ID
+    const fakeCategoryId = '999999999999999999'
+
+    try {
+      await updateTransactionCategory(auth, client, {
+        id: txn.id,
+        categoryId: fakeCategoryId
+      })
+      expect.fail('Expected an error to be thrown')
+    } catch (e) {
+      // The API returns GraphQL-level errors for invalid category IDs
+      expect(e).toBeInstanceOf(MonarchGraphQLError)
+      const error = e as MonarchGraphQLError
+      
+      expect(error.name).toBe('MonarchGraphQLError')
+      expect(typeof error.message).toBe('string')
+      expect(error.message.length).toBeGreaterThan(0)
+      
+      // Structured error data should be accessible
+      expect(error.status).toBe(200)
+      expect(Array.isArray(error.errors)).toBe(true)
+      expect(error.errors.length).toBeGreaterThan(0)
+      expect(error.errors[0]).toHaveProperty('message')
+      
+      // Path should indicate which operation failed
+      expect(error.path).toEqual(['updateTransaction'])
     }
   })
 })

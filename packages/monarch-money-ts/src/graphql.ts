@@ -1,7 +1,8 @@
-// src/new/graphql.ts - MonarchGraphQLClient wrapper
+// src/graphql.ts - MonarchGraphQLClient wrapper
 import { GraphQLClient } from 'graphql-request';
 import { buildAuthHeaders, type AuthProvider } from './auth.js';
 import type { ZodType } from 'zod';
+import { MonarchGraphQLError, type GraphQLErrorDetail } from './common.types.js';
 
 export class MonarchGraphQLClient {
 
@@ -54,13 +55,18 @@ export class MonarchGraphQLClient {
   private wrapError(err: unknown): Error {
     const anyErr = err as any;
     const response = anyErr?.response;
-    if (response) {
+    
+    if (response && Array.isArray(response.errors) && response.errors.length > 0) {
       const status = response.status ?? response.http?.status ?? 'unknown';
-      const messages = Array.isArray(response.errors)
-        ? response.errors.map((e: any) => e?.message).filter(Boolean).join('; ')
-        : anyErr?.message;
-      return new Error(`GraphQL ${status}: ${messages || 'request failed'}`);
+      const errors: GraphQLErrorDetail[] = response.errors.map((e: any) => ({
+        message: e?.message ?? 'Unknown error',
+        locations: e?.locations,
+        path: e?.path,
+      }));
+      const message = errors.map(e => e.message).join('; ');
+      return new MonarchGraphQLError(message, status, errors);
     }
+    
     if (anyErr instanceof Error) {
       return new Error(`GraphQL request failed: ${anyErr.message}`);
     }

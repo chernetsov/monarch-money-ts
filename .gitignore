@@ -2,6 +2,7 @@ node_modules
 monarch
 .mm
 .vercel
+.DS_Store
 
 # Environment files
 .env

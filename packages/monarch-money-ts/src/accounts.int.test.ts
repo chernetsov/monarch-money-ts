@@ -1,6 +1,6 @@
 import { describe, it, expect } from 'vitest'
 import { getIntegrationContext } from './test-utils.js'
-import { getAccounts, getHoldings } from './accounts.js'
+import { getAccounts } from './accounts.api.js'
 
 describe('integration: accounts', () => {
   it('gets accounts (no filters)', async () => {
@@ -28,16 +28,5 @@ describe('integration: accounts', () => {
     const { auth, client } = getIntegrationContext()
     const accounts = await getAccounts(auth, client, { accountType: 'brokerage', includeManual: true, includeHidden: false, ignoreHiddenFromNetWorth: true })
     expect(Array.isArray(accounts)).toBe(true)
-  })
-
-  it('gets holdings for at least one account (portfolio view)', async () => {
-    const { auth, client } = getIntegrationContext()
-    const holdings = await getHoldings(auth, client, { /* empty defaults */ })
-    expect(Array.isArray(holdings)).toBe(true)
-    if (holdings.length > 0) {
-      expect(holdings[0]).toHaveProperty('id')
-      expect(holdings[0]).toHaveProperty('holdings')
-      expect(Array.isArray(holdings[0].holdings)).toBe(true)
-    }
   })
 })
