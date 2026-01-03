@@ -1,17 +1,47 @@
 {
-  "name": "monarch-money",
-  "version": "0.0.0",
+  "name": "monarch-money-ts",
+  "version": "0.0.1",
   "private": true,
+  "description": "Unofficial Monarch Money API",
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
   "type": "module",
   "scripts": {
-    "build": "pnpm --filter monarch-money-ts build",
-    "test": "pnpm --filter monarch-money-ts test",
-    "test:integration": "pnpm --filter monarch-money-ts test:integration",
-    "clean": "pnpm --filter monarch-money-ts clean",
-    "mmtraf": "pnpm --filter monarch-money-ts mmtraf"
+    "build": "tsc",
+    "test": "vitest --run",
+    "test:integration": "vitest --run -c vitest.integration.config.ts",
+    "clean": "rm -rf dist",
+    "mmtraf": "tsx tools/mmtraf.ts"
   },
+  "files": [
+    "dist"
+  ],
+  "keywords": [
+    "monarch",
+    "money",
+    "api"
+  ],
+  "author": "Mikhail Chernetsov",
+  "bugs": {
+    "url": "https://github.com/chernetsov/monarch-money-ts/issues"
+  },
+  "homepage": "https://github.com/chernetsov/monarch-money-ts",
+  "license": "MIT",
   "dependencies": {
-    "@modelcontextprotocol/sdk": "^1.19.1",
+    "graphql-request": "^7.2.0",
+    "node-fetch": "^3.3.2",
+    "totp-generator": "^2.0.0",
     "zod": "^3.25.76"
+  },
+  "devDependencies": {
+    "@types/node": "^20.0.0",
+    "@vitest/coverage-v8": "^1.0.0",
+    "commander": "^12.1.0",
+    "dotenv": "^17.2.0",
+    "quicktype-core": "^23.2.6",
+    "stream-json": "^1.9.1",
+    "tsx": "^4.0.0",
+    "typescript": "^5.0.0",
+    "vitest": "^1.0.0"
   }
 }

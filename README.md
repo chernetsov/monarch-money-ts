@@ -9,6 +9,6 @@ An unofficial TypeScript client for the Monarch Money API with comprehensive typ
 ## TODO till first version release
 
 - [ ] complete this readme
-- [ ] complete this readme
+- [ ] publish the first version to npm
 
  
