@@ -1,11 +1,7 @@
----
-alwaysApply: true
----
-
 # Traffic Logs and mmtraf tool
 
 According to convention user puts gitignored traffic logs under traffic/ directory.
-This repository has a tool called mmtraf that simplifies working with these traffic logs. You have to read [mmtraf.md](../../mmtraf.md) for usage docs. Always use this tool to look at the contents of traffic log files (they are too large to load into context directly).
+This repository has a tool called mmtraf that simplifies working with these traffic logs. You have to read [mmtraf.md](packages/mmtraf.md) for usage docs. Always use this tool to look at the contents of traffic log files (they are too large to load into context directly).
 
 First see the list of files using `list`, then use `summary` to find the request of interest. Next, inspect the request with `body:req-at` and `graphql:req-at`, infer the response schema with `schema:res-at`, and walk the response body using `body:res-at` and jq.
 
@@ -50,3 +46,4 @@ When building APIs after looking at requests and responses, follow the following
   - **Assertions**: Validate array shape and presence of key fields (e.g., `id`, `displayName`, `type`) rather than snapshots.
   - **Scope**: Exercise real GraphQL endpoints; prefer simple, robust expectations to handle live data variance.
   - **Naming**: Group by feature (e.g., `describe('integration: accounts', ...)`).
+
