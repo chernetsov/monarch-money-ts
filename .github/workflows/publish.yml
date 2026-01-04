@@ -11,8 +11,6 @@ jobs:
     permissions:
       contents: read
       id-token: write
-    env:
-      NODE_AUTH_TOKEN: ""
     steps:
       - uses: actions/checkout@v4
       - uses: pnpm/action-setup@v4
@@ -20,9 +18,11 @@ jobs:
           version: 9
       - uses: actions/setup-node@v4
         with:
-          node-version: 20
+          node-version: 22
           cache: pnpm
           registry-url: https://registry.npmjs.org
+      - name: Upgrade npm for trusted publishing
+        run: npm i -g npm@^11.5.1
       - name: Install
         run: pnpm install --frozen-lockfile
       - name: Build
