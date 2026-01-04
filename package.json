@@ -1,6 +1,6 @@
 {
   "name": "monarch-money-ts",
-  "version": "0.0.4",
+  "version": "0.0.5",
   "private": false,
   "description": "Unofficial Monarch Money API",
   "main": "dist/index.js",
