@@ -66,6 +66,8 @@ export const TransactionSchema = z.object({
   isRecurring: z.boolean(),
   reviewStatus: z.string().nullable(),
   needsReview: z.boolean(),
+  reviewedAt: z.string().nullable(), // ISO 8601 timestamp
+  reviewedByUser: UserSummarySchema.nullable(),
   isSplitTransaction: z.boolean(),
   dataProviderDescription: z.string(),
   attachments: z.array(AttachmentSummarySchema),
@@ -92,6 +94,10 @@ export const TRANSACTION_FIELDS = `
   isRecurring
   reviewStatus
   needsReview
+  reviewedAt
+  reviewedByUser {
+    ${USER_SUMMARY_FIELDS}
+  }
   isSplitTransaction
   dataProviderDescription
   attachments {
@@ -178,7 +184,33 @@ export interface GetTransactionsOptions {
 // ---------------- Update Transaction Types ----------------
 
 /**
+ * Generic input for updating a transaction.
+ * All fields except id are optional - only provide the fields you want to update.
+ */
+export interface UpdateTransactionInput {
+  /** Transaction ID to update */
+  id: string;
+  /** Category ID to assign */
+  category?: string;
+  /** Whether this is a recommended category (used with category updates) */
+  isRecommendedCategory?: boolean;
+  /** Mark transaction as reviewed (true) or needing review (false) */
+  reviewed?: boolean;
+  /** Mark transaction as needing review */
+  needsReview?: boolean;
+  /** Transaction notes */
+  notes?: string;
+  /** Merchant ID */
+  merchant?: string;
+  /** Hide from reports */
+  hideFromReports?: boolean;
+  /** Tag IDs to assign */
+  tags?: string[];
+}
+
+/**
  * Input for updating a transaction's category.
+ * @deprecated Use UpdateTransactionInput instead for more flexibility
  */
 export interface UpdateTransactionCategoryInput {
   /** Transaction ID to update */

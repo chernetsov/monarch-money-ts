@@ -10,6 +10,7 @@ import {
   type Transaction,
   UpdateTransactionResponseSchema,
   type UpdateTransactionResponse,
+  type UpdateTransactionInput,
   type UpdateTransactionCategoryInput,
   TRANSACTION_FIELDS,
 } from './transactions.types.js';
@@ -95,30 +96,48 @@ export async function getTransactions(
 }
 
 /**
- * Update the category of a transaction.
+ * Update a transaction with flexible field updates.
  * 
  * @param auth - Authentication provider
  * @param client - MonarchGraphQLClient instance
- * @param input - Transaction ID and new category ID
+ * @param input - Transaction ID and fields to update
  * @returns The updated transaction
  * 
  * @example
  * ```typescript
- * const updated = await updateTransactionCategory(auth, client, {
+ * // Update category
+ * const updated = await updateTransaction(auth, client, {
  *   id: '231907009223344866',
- *   categoryId: '170834763911676527'
+ *   category: '170834763911676527',
+ *   isRecommendedCategory: false
  * });
  * 
- * console.log(`Updated category to: ${updated.category.name}`);
+ * // Mark as reviewed
+ * const reviewed = await updateTransaction(auth, client, {
+ *   id: '231907009223344866',
+ *   reviewed: true
+ * });
+ * 
+ * // Mark as needing review
+ * const needsReview = await updateTransaction(auth, client, {
+ *   id: '231907009223344866',
+ *   needsReview: true
+ * });
+ * 
+ * // Update notes
+ * const withNotes = await updateTransaction(auth, client, {
+ *   id: '231907009223344866',
+ *   notes: 'Business expense'
+ * });
  * ```
  */
-export async function updateTransactionCategory(
+export async function updateTransaction(
   auth: AuthProvider,
   client: MonarchGraphQLClient,
-  input: UpdateTransactionCategoryInput
+  input: UpdateTransactionInput
 ): Promise<Transaction> {
   const mutation = gql`
-    mutation Web_UpdateTransactionOverview($input: UpdateTransactionMutationInput!) {
+    mutation Web_UpdateTransaction($input: UpdateTransactionMutationInput!) {
       updateTransaction(input: $input) {
         transaction {
           ${TRANSACTION_FIELDS}
@@ -138,11 +157,12 @@ export async function updateTransactionCategory(
     }
   `;
 
+  // Build variables object with only the fields that were provided
+  const { id, ...updateFields } = input;
   const variables = {
     input: {
-      id: input.id,
-      category: input.categoryId,
-      isRecommendedCategory: false,
+      id,
+      ...updateFields,
     },
   };
 
@@ -172,5 +192,37 @@ export async function updateTransactionCategory(
   }
 
   return transaction;
+}
+
+/**
+ * Update the category of a transaction.
+ * 
+ * @param auth - Authentication provider
+ * @param client - MonarchGraphQLClient instance
+ * @param input - Transaction ID and new category ID
+ * @returns The updated transaction
+ * 
+ * @deprecated Use updateTransaction instead for more flexibility
+ * 
+ * @example
+ * ```typescript
+ * const updated = await updateTransactionCategory(auth, client, {
+ *   id: '231907009223344866',
+ *   categoryId: '170834763911676527'
+ * });
+ * 
+ * console.log(`Updated category to: ${updated.category.name}`);
+ * ```
+ */
+export async function updateTransactionCategory(
+  auth: AuthProvider,
+  client: MonarchGraphQLClient,
+  input: UpdateTransactionCategoryInput
+): Promise<Transaction> {
+  return updateTransaction(auth, client, {
+    id: input.id,
+    category: input.categoryId,
+    isRecommendedCategory: false,
+  });
 }
 

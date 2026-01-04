@@ -1,6 +1,6 @@
 import { describe, it, expect } from 'vitest'
 import { getIntegrationContext } from './test-utils.js'
-import { getTransactions, updateTransactionCategory } from './transactions.api.js'
+import { getTransactions, updateTransaction, updateTransactionCategory } from './transactions.api.js'
 import { getBudgetCategories } from './categories.api.js'
 import { MonarchMutationError, MonarchGraphQLError } from './common.types.js'
 
@@ -145,6 +145,112 @@ describe('integration: transactions', () => {
       // Path should indicate which operation failed
       expect(error.path).toEqual(['updateTransaction'])
     }
+  })
+
+  it('marks transaction as reviewed', async () => {
+    const { auth, client } = getIntegrationContext()
+
+    // Get a transaction to update
+    const txnResult = await getTransactions(auth, client, { limit: 1 })
+    expect(txnResult.transactions.length).toBeGreaterThan(0)
+    const txn = txnResult.transactions[0]
+
+    // Mark as reviewed
+    const reviewed = await updateTransaction(auth, client, {
+      id: txn.id,
+      reviewed: true
+    })
+
+    expect(reviewed.id).toBe(txn.id)
+    expect(reviewed.needsReview).toBe(false)
+    expect(reviewed.reviewedAt).not.toBeNull()
+    expect(typeof reviewed.reviewedAt).toBe('string')
+    expect(reviewed.reviewedByUser).not.toBeNull()
+    expect(reviewed.reviewedByUser).toHaveProperty('id')
+    expect(reviewed.reviewedByUser).toHaveProperty('displayName')
+  })
+
+  it('marks transaction as needing review', async () => {
+    const { auth, client } = getIntegrationContext()
+
+    // Get a transaction to update
+    const txnResult = await getTransactions(auth, client, { limit: 1 })
+    expect(txnResult.transactions.length).toBeGreaterThan(0)
+    const txn = txnResult.transactions[0]
+
+    // First mark as reviewed
+    await updateTransaction(auth, client, {
+      id: txn.id,
+      reviewed: true
+    })
+
+    // Then mark as needing review
+    const needsReview = await updateTransaction(auth, client, {
+      id: txn.id,
+      needsReview: true
+    })
+
+    expect(needsReview.id).toBe(txn.id)
+    expect(needsReview.needsReview).toBe(true)
+  })
+
+  it('updates transaction with generic updateTransaction', async () => {
+    const { auth, client } = getIntegrationContext()
+
+    // Get a transaction to update
+    const txnResult = await getTransactions(auth, client, { limit: 1 })
+    expect(txnResult.transactions.length).toBeGreaterThan(0)
+    const txn = txnResult.transactions[0]
+    const originalCategoryId = txn.category.id
+
+    // Get categories to find a different one
+    const { categories } = await getBudgetCategories(auth, client)
+    const differentCategory = categories.find(c => c.id !== originalCategoryId && !c.isDisabled)
+    expect(differentCategory).toBeDefined()
+
+    // Update category using generic updateTransaction
+    const updated = await updateTransaction(auth, client, {
+      id: txn.id,
+      category: differentCategory!.id,
+      isRecommendedCategory: false
+    })
+
+    expect(updated.id).toBe(txn.id)
+    expect(updated.category.id).toBe(differentCategory!.id)
+    expect(updated.category.name).toBe(differentCategory!.name)
+
+    // Restore original category
+    await updateTransaction(auth, client, {
+      id: txn.id,
+      category: originalCategoryId,
+      isRecommendedCategory: false
+    })
+  })
+
+  it('updates transaction notes', async () => {
+    const { auth, client } = getIntegrationContext()
+
+    // Get a transaction to update
+    const txnResult = await getTransactions(auth, client, { limit: 1 })
+    expect(txnResult.transactions.length).toBeGreaterThan(0)
+    const txn = txnResult.transactions[0]
+    const originalNotes = txn.notes
+
+    // Update notes
+    const testNote = `Test note ${Date.now()}`
+    const updated = await updateTransaction(auth, client, {
+      id: txn.id,
+      notes: testNote
+    })
+
+    expect(updated.id).toBe(txn.id)
+    expect(updated.notes).toBe(testNote)
+
+    // Restore original notes
+    await updateTransaction(auth, client, {
+      id: txn.id,
+      notes: originalNotes || ''
+    })
   })
 })
 
