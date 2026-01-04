@@ -25,6 +25,10 @@
   "bugs": {
     "url": "https://github.com/chernetsov/monarch-money-ts/issues"
   },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/chernetsov/monarch-money-ts"
+  },
   "homepage": "https://github.com/chernetsov/monarch-money-ts",
   "license": "MIT",
   "dependencies": {
