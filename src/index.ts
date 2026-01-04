@@ -11,5 +11,7 @@ export * from './categories.types.js';
 export * from './categories.api.js';
 export * from './rules.types.js';
 export * from './rules.api.js';
+export * from './budget.types.js';
+export * from './budget.api.js';
 export * from './graphql.js';
 export * from './test-utils.js';

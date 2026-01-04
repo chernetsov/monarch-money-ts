@@ -163,7 +163,7 @@ export type TransactionFiltersInput = Partial<{
   endDate: string;   // YYYY-MM-DD
   amount: number;
   amountOperator: string; // "lt" | "lte" | "eq" | "gte" | "gt"
-  pending: boolean;
+  isPending: boolean; // Note: filter uses isPending, but Transaction type has pending field
   hideFromReports: boolean;
   needsReview: boolean;
   isRecurring: boolean;
