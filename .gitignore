@@ -10,4 +10,7 @@ monarch
 # Test token cache
 .tests-cached-token.json
 
+# Traffic logs
+traffic/
+
 /dist
