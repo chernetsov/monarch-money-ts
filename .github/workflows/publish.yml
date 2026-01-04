@@ -11,6 +11,8 @@ jobs:
     permissions:
       contents: read
       id-token: write
+    env:
+      NODE_AUTH_TOKEN: ""
     steps:
       - uses: actions/checkout@v4
       - uses: pnpm/action-setup@v4
