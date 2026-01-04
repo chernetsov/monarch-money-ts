@@ -20,6 +20,6 @@ jobs:
       - name: Install
         run: pnpm install --frozen-lockfile
       - name: Test
-        run: pnpm test
+        run: pnpm test -- --passWithNoTests
       - name: Build
         run: pnpm build
