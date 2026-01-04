@@ -235,7 +235,7 @@ export const TransactionRuleSchema = z.object({
   id: z.string(),
   order: z.number(),
   merchantCriteriaUseOriginalStatement: z.boolean(),
-  merchantCriteria: z.array(MerchantCriterionSchema),
+  merchantCriteria: z.array(MerchantCriterionSchema).nullable(),
   originalStatementCriteria: z.array(MerchantCriterionSchema).nullable(),
   merchantNameCriteria: z.array(MerchantCriterionSchema).nullable(),
   amountCriteria: AmountCriteriaSchema.nullable(),
