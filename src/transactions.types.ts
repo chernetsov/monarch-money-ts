@@ -197,7 +197,7 @@ export interface GetTransactionsOptions {
  * Returns a single transaction by ID along with household user information.
  */
 export const GetTransactionResponseSchema = z.object({
-  getTransaction: TransactionSchema,
+  getTransaction: TransactionSchema.nullable(),
   myHousehold: z.object({
     id: z.string(),
     users: z.array(UserSummarySchema),

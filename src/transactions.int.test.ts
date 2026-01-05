@@ -85,33 +85,47 @@ describe('integration: transactions', () => {
     // Fetch the single transaction
     const txn = await getTransaction(auth, client, { id: txnId })
 
+    // Should not be null
+    expect(txn).not.toBeNull()
+
     // Validate basic fields
-    expect(txn.id).toBe(txnId)
-    expect(typeof txn.amount).toBe('number')
-    expect(typeof txn.pending).toBe('boolean')
-    expect(typeof txn.date).toBe('string')
-    expect(typeof txn.isRecurring).toBe('boolean')
-    expect(typeof txn.needsReview).toBe('boolean')
-    expect(typeof txn.isSplitTransaction).toBe('boolean')
+    expect(txn!.id).toBe(txnId)
+    expect(typeof txn!.amount).toBe('number')
+    expect(typeof txn!.pending).toBe('boolean')
+    expect(typeof txn!.date).toBe('string')
+    expect(typeof txn!.isRecurring).toBe('boolean')
+    expect(typeof txn!.needsReview).toBe('boolean')
+    expect(typeof txn!.isSplitTransaction).toBe('boolean')
 
     // Validate nested objects
-    expect(txn.account).toHaveProperty('id')
-    expect(txn.account).toHaveProperty('displayName')
-    expect(txn.category).toHaveProperty('id')
-    expect(txn.category).toHaveProperty('name')
-    expect(txn.merchant).toHaveProperty('id')
-    expect(txn.merchant).toHaveProperty('name')
+    expect(txn!.account).toHaveProperty('id')
+    expect(txn!.account).toHaveProperty('displayName')
+    expect(txn!.category).toHaveProperty('id')
+    expect(txn!.category).toHaveProperty('name')
+    expect(txn!.merchant).toHaveProperty('id')
+    expect(txn!.merchant).toHaveProperty('name')
 
     // Validate detail-only fields
-    expect(txn).toHaveProperty('originalDate')
-    expect(txn).toHaveProperty('hasSplitTransactions')
-    expect(txn).toHaveProperty('isManual')
-    expect(txn).toHaveProperty('updatedByRetailSync')
+    expect(txn!).toHaveProperty('originalDate')
+    expect(txn!).toHaveProperty('hasSplitTransactions')
+    expect(txn!).toHaveProperty('isManual')
+    expect(txn!).toHaveProperty('updatedByRetailSync')
     
     // These should be defined (even if null/empty)
-    if (txn.hasSplitTransactions) {
-      expect(Array.isArray(txn.splitTransactions)).toBe(true)
+    if (txn!.hasSplitTransactions) {
+      expect(Array.isArray(txn!.splitTransactions)).toBe(true)
     }
+  })
+
+  it('returns null for non-existent transaction ID', async () => {
+    const { auth, client } = getIntegrationContext()
+
+    // Use a fake transaction ID that doesn't exist
+    const fakeId = '999999999999999999'
+    
+    const txn = await getTransaction(auth, client, { id: fakeId })
+    
+    expect(txn).toBeNull()
   })
 
   it('updates transaction category', async () => {

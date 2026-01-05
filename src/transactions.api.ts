@@ -122,7 +122,7 @@ export async function getTransaction(
   auth: AuthProvider,
   client: MonarchGraphQLClient,
   options: GetTransactionOptions
-): Promise<Transaction> {
+): Promise<Transaction | null> {
   const query = gql`
     query GetTransactionDrawer($id: UUID!, $redirectPosted: Boolean) {
       getTransaction(id: $id, redirectPosted: $redirectPosted) {
