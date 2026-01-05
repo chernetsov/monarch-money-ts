@@ -47,3 +47,41 @@ When building APIs after looking at requests and responses, follow the following
   - **Scope**: Exercise real GraphQL endpoints; prefer simple, robust expectations to handle live data variance.
   - **Naming**: Group by feature (e.g., `describe('integration: accounts', ...)`).
 
+# Publishing
+
+This package is published to npm automatically via CI when a version tag is pushed:
+
+1. **Build and test**: Ensure all tests pass and the build succeeds locally
+   ```bash
+   pnpm build
+   pnpm test
+   pnpm test:integration  # optional but recommended
+   ```
+
+2. **Commit changes**: Push all changes to the repository
+   ```bash
+   git add .
+   git commit -m "description of changes"
+   git push
+   ```
+
+3. **Bump version**: Update version in `package.json` (follow semver)
+   ```bash
+   # For patch releases (bug fixes): 0.0.5 → 0.0.6
+   # For minor releases (new features): 0.0.x → 0.1.0
+   # For major releases (breaking changes): 0.x.y → 1.0.0
+   ```
+
+4. **Push tag**: Create and push a version tag to trigger CI publish
+   ```bash
+   git tag v0.0.6
+   git push origin v0.0.6
+   ```
+
+5. **CI automatically**:
+   - Runs tests
+   - Builds the package
+   - Publishes to npm if tests pass
+
+The CI workflow is triggered only by version tags (e.g., `v0.0.6`), not by regular commits.
+

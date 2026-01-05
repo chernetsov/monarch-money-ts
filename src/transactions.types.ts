@@ -78,6 +78,15 @@ export const TransactionSchema = z.object({
   account: AccountSummarySchema,
   savingsGoalEvent: SavingsGoalEventSchema.nullable(),
   ownedByUser: UserSummarySchema.nullable(),
+  // Additional fields from detailed transaction view (getTransaction query)
+  originalDate: z.string().optional(), // YYYY-MM-DD format
+  hasSplitTransactions: z.boolean().optional(),
+  isManual: z.boolean().optional(),
+  updatedByRetailSync: z.boolean().optional(),
+  splitTransactions: z.array(z.unknown()).optional(), // Array of split transaction references
+  originalTransaction: z.unknown().optional(), // Original transaction reference if this is a correction
+  needsReviewByUser: UserSummarySchema.nullable().optional(),
+  ownershipOverriddenAt: z.string().nullable().optional(), // ISO 8601 timestamp
   __typename: z.string().optional(),
 }).strict();
 export type Transaction = z.infer<typeof TransactionSchema>;
@@ -181,6 +190,32 @@ export interface GetTransactionsOptions {
   filters?: TransactionFiltersInput;
 }
 
+// ---------------- Get Single Transaction Response ----------------
+
+/**
+ * Response from getTransaction query.
+ * Returns a single transaction by ID along with household user information.
+ */
+export const GetTransactionResponseSchema = z.object({
+  getTransaction: TransactionSchema,
+  myHousehold: z.object({
+    id: z.string(),
+    users: z.array(UserSummarySchema),
+    __typename: z.string().optional(),
+  }).strict().optional(),
+}).strict();
+export type GetTransactionResponse = z.infer<typeof GetTransactionResponseSchema>;
+
+/**
+ * Input options for fetching a single transaction.
+ */
+export interface GetTransactionOptions {
+  /** Transaction ID to fetch */
+  id: string;
+  /** Whether to redirect posted transactions (optional) */
+  redirectPosted?: boolean;
+}
+
 // ---------------- Update Transaction Types ----------------
 
 /**
@@ -208,16 +243,6 @@ export interface UpdateTransactionInput {
   tags?: string[];
 }
 
-/**
- * Input for updating a transaction's category.
- * @deprecated Use UpdateTransactionInput instead for more flexibility
- */
-export interface UpdateTransactionCategoryInput {
-  /** Transaction ID to update */
-  id: string;
-  /** Category ID to assign */
-  categoryId: string;
-}
 
 /**
  * Response schema for updateTransaction mutation.

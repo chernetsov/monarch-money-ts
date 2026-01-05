@@ -7,11 +7,13 @@ import {
   GetTransactionsResponseSchema,
   type GetTransactionsResponse,
   type GetTransactionsOptions,
+  GetTransactionResponseSchema,
+  type GetTransactionResponse,
+  type GetTransactionOptions,
   type Transaction,
   UpdateTransactionResponseSchema,
   type UpdateTransactionResponse,
   type UpdateTransactionInput,
-  type UpdateTransactionCategoryInput,
   TRANSACTION_FIELDS,
 } from './transactions.types.js';
 
@@ -93,6 +95,72 @@ export async function getTransactions(
     totalSelectableCount: response.allTransactions.totalSelectableCount,
     transactionRuleIds: response.transactionRules.map((rule) => rule.id),
   };
+}
+
+/**
+ * Get a single transaction by ID with full detail.
+ * 
+ * @param auth - Authentication provider
+ * @param client - MonarchGraphQLClient instance
+ * @param options - Transaction ID and optional flags
+ * @returns The transaction with full details
+ * 
+ * @example
+ * ```typescript
+ * const transaction = await getTransaction(auth, client, {
+ *   id: '231087434332258839',
+ *   redirectPosted: true
+ * });
+ * 
+ * console.log(`Transaction: ${transaction.merchant.name} - $${transaction.amount}`);
+ * if (transaction.hasSplitTransactions) {
+ *   console.log(`Has ${transaction.splitTransactions?.length} split transactions`);
+ * }
+ * ```
+ */
+export async function getTransaction(
+  auth: AuthProvider,
+  client: MonarchGraphQLClient,
+  options: GetTransactionOptions
+): Promise<Transaction> {
+  const query = gql`
+    query GetTransactionDrawer($id: UUID!, $redirectPosted: Boolean) {
+      getTransaction(id: $id, redirectPosted: $redirectPosted) {
+        ${TRANSACTION_FIELDS}
+        originalDate
+        hasSplitTransactions
+        isManual
+        updatedByRetailSync
+        splitTransactions {
+          id
+          __typename
+        }
+        originalTransaction {
+          id
+          __typename
+        }
+        needsReviewByUser {
+          id
+          __typename
+        }
+        ownershipOverriddenAt
+      }
+    }
+  `;
+
+  const variables = {
+    id: options.id,
+    redirectPosted: options.redirectPosted ?? true,
+  };
+
+  const response = await client.request<GetTransactionResponse>(
+    query,
+    auth,
+    GetTransactionResponseSchema,
+    variables
+  );
+
+  return response.getTransaction;
 }
 
 /**
@@ -192,37 +260,5 @@ export async function updateTransaction(
   }
 
   return transaction;
-}
-
-/**
- * Update the category of a transaction.
- * 
- * @param auth - Authentication provider
- * @param client - MonarchGraphQLClient instance
- * @param input - Transaction ID and new category ID
- * @returns The updated transaction
- * 
- * @deprecated Use updateTransaction instead for more flexibility
- * 
- * @example
- * ```typescript
- * const updated = await updateTransactionCategory(auth, client, {
- *   id: '231907009223344866',
- *   categoryId: '170834763911676527'
- * });
- * 
- * console.log(`Updated category to: ${updated.category.name}`);
- * ```
- */
-export async function updateTransactionCategory(
-  auth: AuthProvider,
-  client: MonarchGraphQLClient,
-  input: UpdateTransactionCategoryInput
-): Promise<Transaction> {
-  return updateTransaction(auth, client, {
-    id: input.id,
-    category: input.categoryId,
-    isRecommendedCategory: false,
-  });
 }
 

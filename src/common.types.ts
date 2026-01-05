@@ -26,7 +26,7 @@ export interface GraphQLErrorDetail {
  * @example
  * ```typescript
  * try {
- *   await updateTransactionCategory(auth, client, input);
+ *   await updateTransaction(auth, client, input);
  * } catch (e) {
  *   if (e instanceof MonarchGraphQLError) {
  *     console.log(e.status);   // 200
@@ -65,7 +65,7 @@ export interface FieldError {
  * @example
  * ```typescript
  * try {
- *   await updateTransactionCategory(auth, client, input);
+ *   await updateTransaction(auth, client, input);
  * } catch (e) {
  *   if (e instanceof MonarchMutationError) {
  *     console.log(e.code);        // e.g., "INVALID_INPUT"

@@ -1,6 +1,6 @@
 import { describe, it, expect } from 'vitest'
 import { getIntegrationContext } from './test-utils.js'
-import { getTransactions, updateTransaction, updateTransactionCategory } from './transactions.api.js'
+import { getTransaction, getTransactions, updateTransaction } from './transactions.api.js'
 import { getBudgetCategories } from './categories.api.js'
 import { MonarchMutationError, MonarchGraphQLError } from './common.types.js'
 
@@ -74,6 +74,46 @@ describe('integration: transactions', () => {
     }
   })
 
+  it('gets a single transaction by ID', async () => {
+    const { auth, client } = getIntegrationContext()
+
+    // First get a transaction ID from the list
+    const listResult = await getTransactions(auth, client, { limit: 1 })
+    expect(listResult.transactions.length).toBeGreaterThan(0)
+    const txnId = listResult.transactions[0].id
+
+    // Fetch the single transaction
+    const txn = await getTransaction(auth, client, { id: txnId })
+
+    // Validate basic fields
+    expect(txn.id).toBe(txnId)
+    expect(typeof txn.amount).toBe('number')
+    expect(typeof txn.pending).toBe('boolean')
+    expect(typeof txn.date).toBe('string')
+    expect(typeof txn.isRecurring).toBe('boolean')
+    expect(typeof txn.needsReview).toBe('boolean')
+    expect(typeof txn.isSplitTransaction).toBe('boolean')
+
+    // Validate nested objects
+    expect(txn.account).toHaveProperty('id')
+    expect(txn.account).toHaveProperty('displayName')
+    expect(txn.category).toHaveProperty('id')
+    expect(txn.category).toHaveProperty('name')
+    expect(txn.merchant).toHaveProperty('id')
+    expect(txn.merchant).toHaveProperty('name')
+
+    // Validate detail-only fields
+    expect(txn).toHaveProperty('originalDate')
+    expect(txn).toHaveProperty('hasSplitTransactions')
+    expect(txn).toHaveProperty('isManual')
+    expect(txn).toHaveProperty('updatedByRetailSync')
+    
+    // These should be defined (even if null/empty)
+    if (txn.hasSplitTransactions) {
+      expect(Array.isArray(txn.splitTransactions)).toBe(true)
+    }
+  })
+
   it('updates transaction category', async () => {
     const { auth, client } = getIntegrationContext()
 
@@ -89,9 +129,10 @@ describe('integration: transactions', () => {
     expect(differentCategory).toBeDefined()
 
     // Update to a different category
-    const updated = await updateTransactionCategory(auth, client, {
+    const updated = await updateTransaction(auth, client, {
       id: txn.id,
-      categoryId: differentCategory!.id
+      category: differentCategory!.id,
+      isRecommendedCategory: false
     })
 
     expect(updated.id).toBe(txn.id)
@@ -102,9 +143,10 @@ describe('integration: transactions', () => {
     expect(updated).toHaveProperty('account')
 
     // Restore original category
-    const restored = await updateTransactionCategory(auth, client, {
+    const restored = await updateTransaction(auth, client, {
       id: txn.id,
-      categoryId: originalCategoryId
+      category: originalCategoryId,
+      isRecommendedCategory: false
     })
 
     expect(restored.category.id).toBe(originalCategoryId)
@@ -122,9 +164,10 @@ describe('integration: transactions', () => {
     const fakeCategoryId = '999999999999999999'
 
     try {
-      await updateTransactionCategory(auth, client, {
+      await updateTransaction(auth, client, {
         id: txn.id,
-        categoryId: fakeCategoryId
+        category: fakeCategoryId,
+        isRecommendedCategory: false
       })
       expect.fail('Expected an error to be thrown')
     } catch (e) {
