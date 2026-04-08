@@ -15,7 +15,7 @@ import {
 export async function getAccounts(
   auth: AuthProvider,
   client: MonarchGraphQLClient,
-  filters?: AccountFiltersInput
+  filters?: AccountFiltersInput,
 ): Promise<Account[]> {
   const query = gql`
     query Web_GetAccounts($filters: AccountFilters) {
@@ -27,7 +27,11 @@ export async function getAccounts(
         includeInNetWorth
         includeBalanceInNetWorth
         order
-        type { name display __typename }
+        type {
+          name
+          display
+          __typename
+        }
         displayName
         displayBalance
         signedBalance
@@ -37,7 +41,10 @@ export async function getAccounts(
         displayLastUpdatedAt
         limit
         mask
-        subtype { display __typename }
+        subtype {
+          display
+          __typename
+        }
         credential {
           id
           updateRequired
@@ -61,13 +68,23 @@ export async function getAccounts(
           balanceStatus
           __typename
         }
-        ownedByUser { id displayName profilePictureUrl __typename }
+        ownedByUser {
+          id
+          displayName
+          profilePictureUrl
+          __typename
+        }
         __typename
       }
     }
   `;
 
   const variables = { filters: filters ?? {} } as Record<string, unknown>;
-  const response = await client.request<GetAccountsResponse>(query, auth, GetAccountsResponseSchema, variables);
+  const response = await client.request<GetAccountsResponse>(
+    query,
+    auth,
+    GetAccountsResponseSchema,
+    variables,
+  );
   return response.accounts;
 }

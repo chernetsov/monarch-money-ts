@@ -1,7 +1,7 @@
-import { gql } from "graphql-request";
-import { z } from "zod";
-import type { AuthProvider } from "./auth.js";
-import type { MonarchGraphQLClient } from "./graphql.js";
+import { gql } from 'graphql-request';
+import { z } from 'zod';
+import type { AuthProvider } from './auth.js';
+import type { MonarchGraphQLClient } from './graphql.js';
 import {
   BudgetReportSchema,
   type BudgetReport,
@@ -15,7 +15,7 @@ import {
   BUDGET_STATUS_FIELDS,
   BudgetSettingsSchema,
   type BudgetSettings,
-} from "./budget.types.js";
+} from './budget.types.js';
 
 /**
  * Fetches comprehensive budget report data including:
@@ -40,7 +40,7 @@ import {
 export async function getBudgetReport(
   auth: AuthProvider,
   client: MonarchGraphQLClient,
-  input: BudgetReportInput
+  input: BudgetReportInput,
 ): Promise<BudgetReport> {
   const query = gql`
     query GetBudgetReport($startDate: Date!, $endDate: Date!) {
@@ -65,12 +65,7 @@ export async function getBudgetReport(
     endDate: input.endDate,
   };
 
-  const response = await client.request<BudgetReport>(
-    query,
-    auth,
-    BudgetReportSchema,
-    variables
-  );
+  const response = await client.request<BudgetReport>(query, auth, BudgetReportSchema, variables);
   return response;
 }
 
@@ -94,7 +89,7 @@ export async function getBudgetReport(
  */
 export async function getBudgetStatus(
   auth: AuthProvider,
-  client: MonarchGraphQLClient
+  client: MonarchGraphQLClient,
 ): Promise<BudgetStatus> {
   const query = gql`
     query GetBudgetStatus {
@@ -110,7 +105,7 @@ export async function getBudgetStatus(
   const response = await client.request<z.infer<typeof responseSchema>>(
     query,
     auth,
-    responseSchema
+    responseSchema,
   );
   return response.budgetStatus;
 }
@@ -133,7 +128,7 @@ export async function getBudgetStatus(
  */
 export async function getBudgetSettings(
   auth: AuthProvider,
-  client: MonarchGraphQLClient
+  client: MonarchGraphQLClient,
 ): Promise<BudgetSettings> {
   const query = gql`
     query GetBudgetSettings {
@@ -147,11 +142,6 @@ export async function getBudgetSettings(
     }
   `;
 
-  const response = await client.request<BudgetSettings>(
-    query,
-    auth,
-    BudgetSettingsSchema
-  );
+  const response = await client.request<BudgetSettings>(query, auth, BudgetSettingsSchema);
   return response;
 }
-

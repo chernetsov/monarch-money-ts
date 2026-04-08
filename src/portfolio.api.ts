@@ -20,7 +20,7 @@ import {
 export async function getPortfolio(
   auth: AuthProvider,
   client: MonarchGraphQLClient,
-  input?: PortfolioInput
+  input?: PortfolioInput,
 ): Promise<Portfolio> {
   const query = gql`
     query Web_GetPortfolio($portfolioInput: PortfolioInput) {
@@ -39,7 +39,11 @@ export async function getPortfolio(
   `;
 
   const variables = { portfolioInput: input ?? {} } as Record<string, unknown>;
-  const response = await client.request<GetPortfolioResponse>(query, auth, GetPortfolioResponseSchema, variables);
+  const response = await client.request<GetPortfolioResponse>(
+    query,
+    auth,
+    GetPortfolioResponseSchema,
+    variables,
+  );
   return response.portfolio;
 }
-

@@ -56,4 +56,3 @@ pnpm mmtraf graphql:req-at monarch-traffic-<timestamp>.json 0
 # Generate TypeScript types from the response body
 pnpm mmtraf schema:res-at monarch-traffic-<timestamp>.json 0
 ```
-

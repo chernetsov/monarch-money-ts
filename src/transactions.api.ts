@@ -19,12 +19,12 @@ import {
 
 /**
  * Get transactions list with flexible filters and pagination.
- * 
+ *
  * @param auth - Authentication provider
  * @param client - MonarchGraphQLClient instance
  * @param options - Optional filters, pagination, and ordering
  * @returns Object containing transactions array, total count, and transaction rules
- * 
+ *
  * @example
  * ```typescript
  * const result = await getTransactions(auth, client, {
@@ -36,7 +36,7 @@ import {
  *     transactionVisibility: 'non_hidden_transactions_only'
  *   }
  * });
- * 
+ *
  * console.log(`Found ${result.totalCount} transactions`);
  * result.transactions.forEach(txn => {
  *   console.log(`${txn.date}: ${txn.merchant.name} - $${txn.amount}`);
@@ -46,7 +46,7 @@ import {
 export async function getTransactions(
   auth: AuthProvider,
   client: MonarchGraphQLClient,
-  options?: GetTransactionsOptions
+  options?: GetTransactionsOptions,
 ): Promise<{
   transactions: Transaction[];
   totalCount: number;
@@ -86,7 +86,7 @@ export async function getTransactions(
     query,
     auth,
     GetTransactionsResponseSchema,
-    variables
+    variables,
   );
 
   return {
@@ -99,19 +99,19 @@ export async function getTransactions(
 
 /**
  * Get a single transaction by ID with full detail.
- * 
+ *
  * @param auth - Authentication provider
  * @param client - MonarchGraphQLClient instance
  * @param options - Transaction ID and optional flags
  * @returns The transaction with full details
- * 
+ *
  * @example
  * ```typescript
  * const transaction = await getTransaction(auth, client, {
  *   id: '231087434332258839',
  *   redirectPosted: true
  * });
- * 
+ *
  * console.log(`Transaction: ${transaction.merchant.name} - $${transaction.amount}`);
  * if (transaction.hasSplitTransactions) {
  *   console.log(`Has ${transaction.splitTransactions?.length} split transactions`);
@@ -121,7 +121,7 @@ export async function getTransactions(
 export async function getTransaction(
   auth: AuthProvider,
   client: MonarchGraphQLClient,
-  options: GetTransactionOptions
+  options: GetTransactionOptions,
 ): Promise<Transaction | null> {
   const query = gql`
     query GetTransactionDrawer($id: UUID!, $redirectPosted: Boolean) {
@@ -157,7 +157,7 @@ export async function getTransaction(
     query,
     auth,
     GetTransactionResponseSchema,
-    variables
+    variables,
   );
 
   return response.getTransaction;
@@ -165,12 +165,12 @@ export async function getTransaction(
 
 /**
  * Update a transaction with flexible field updates.
- * 
+ *
  * @param auth - Authentication provider
  * @param client - MonarchGraphQLClient instance
  * @param input - Transaction ID and fields to update
  * @returns The updated transaction
- * 
+ *
  * @example
  * ```typescript
  * // Update category
@@ -179,19 +179,19 @@ export async function getTransaction(
  *   category: '170834763911676527',
  *   isRecommendedCategory: false
  * });
- * 
+ *
  * // Mark as reviewed
  * const reviewed = await updateTransaction(auth, client, {
  *   id: '231907009223344866',
  *   reviewed: true
  * });
- * 
+ *
  * // Mark as needing review
  * const needsReview = await updateTransaction(auth, client, {
  *   id: '231907009223344866',
  *   needsReview: true
  * });
- * 
+ *
  * // Update notes
  * const withNotes = await updateTransaction(auth, client, {
  *   id: '231907009223344866',
@@ -202,7 +202,7 @@ export async function getTransaction(
 export async function updateTransaction(
   auth: AuthProvider,
   client: MonarchGraphQLClient,
-  input: UpdateTransactionInput
+  input: UpdateTransactionInput,
 ): Promise<Transaction> {
   const mutation = gql`
     mutation Web_UpdateTransaction($input: UpdateTransactionMutationInput!) {
@@ -238,7 +238,7 @@ export async function updateTransaction(
     mutation,
     auth,
     UpdateTransactionResponseSchema,
-    variables
+    variables,
   );
 
   const { transaction, errors } = response.updateTransaction;
@@ -247,18 +247,13 @@ export async function updateTransaction(
     throw new MonarchMutationError(
       errors.message,
       errors.code,
-      errors.fieldErrors.map((fe) => ({ field: fe.field, messages: fe.messages }))
+      errors.fieldErrors.map((fe) => ({ field: fe.field, messages: fe.messages })),
     );
   }
 
   if (!transaction) {
-    throw new MonarchMutationError(
-      'Transaction update failed: no transaction returned',
-      null,
-      []
-    );
+    throw new MonarchMutationError('Transaction update failed: no transaction returned', null, []);
   }
 
   return transaction;
 }
-

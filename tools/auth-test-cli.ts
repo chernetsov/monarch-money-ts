@@ -3,7 +3,7 @@ import 'dotenv/config';
 import fs from 'fs';
 import path from 'path';
 import { fileURLToPath } from 'url';
-import { EmailPasswordAuthProvider } from '../src/new/auth.js';
+import { EmailPasswordAuthProvider } from '../src/auth.js';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -15,7 +15,6 @@ if (fs.existsSync(envLocalPath)) {
   dotenv.config({ path: envLocalPath });
 }
 
-
 async function main() {
   try {
     const email = process.env.MONARCH_EMAIL;
@@ -23,8 +22,8 @@ async function main() {
     const totpKey = process.env.MONARCH_OTP_KEY;
 
     if (!email || !password) {
-    console.error('Missing MONARCH_EMAIL or MONARCH_PASSWORD in environment (.env.local).');
-    process.exit(1);
+      console.error('Missing MONARCH_EMAIL or MONARCH_PASSWORD in environment (.env.local).');
+      process.exit(1);
     }
 
     const auth = new EmailPasswordAuthProvider({ email, password, totpKey });

@@ -1,29 +1,26 @@
-import { config as loadEnv } from 'dotenv'
-import { existsSync, readFileSync, writeFileSync } from 'node:fs'
-import { dirname, resolve } from 'node:path'
-import { fileURLToPath } from 'node:url'
-import { EmailPasswordAuthProvider } from './auth.js'
-import { MonarchGraphQLClient } from './graphql.js'
+import { config as loadEnv } from 'dotenv';
+import { existsSync, readFileSync, writeFileSync } from 'node:fs';
+import { dirname, resolve } from 'node:path';
+import { fileURLToPath } from 'node:url';
+import { EmailPasswordAuthProvider } from './auth.js';
+import { MonarchGraphQLClient } from './graphql.js';
 
-const __filename = fileURLToPath(import.meta.url)
-const __dirname = dirname(__filename)
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = dirname(__filename);
 
-const envCandidates = [
-  resolve(__dirname, '../../..', '.env'),
-  resolve(__dirname, '..', '.env')
-]
+const envCandidates = [resolve(__dirname, '../../..', '.env'), resolve(__dirname, '..', '.env')];
 
-let envLoaded = false
+let envLoaded = false;
 for (const candidate of envCandidates) {
   if (existsSync(candidate)) {
-    loadEnv({ path: candidate })
-    envLoaded = true
-    break
+    loadEnv({ path: candidate });
+    envLoaded = true;
+    break;
   }
 }
 
 if (!envLoaded) {
-  loadEnv()
+  loadEnv();
 }
 
 export interface IntegrationContext {
@@ -49,17 +46,21 @@ const loadTokenCache = (email: string): Pick<TokenCache, 'token' | 'tokenExpires
     if (cache.email === email) {
       return { token: cache.token, tokenExpiresAtMs: cache.tokenExpiresAtMs };
     }
-  } catch (e) {
+  } catch {
     // Ignore errors and proceed without cache
   }
   return null;
 };
 
-const saveTokenCache = (email: string, token: string, tokenExpiresAtMs: number | undefined): void => {
+const saveTokenCache = (
+  email: string,
+  token: string,
+  tokenExpiresAtMs: number | undefined,
+): void => {
   try {
     const cache: TokenCache = { email, token, tokenExpiresAtMs };
     writeFileSync(TOKEN_CACHE_FILE, JSON.stringify(cache, null, 2), 'utf-8');
-  } catch (e) {
+  } catch {
     // Ignore save errors
   }
 };
@@ -80,14 +81,14 @@ export const getIntegrationContext = (): IntegrationContext => {
   const cachedToken = loadTokenCache(email);
 
   const auth = new EmailPasswordAuthProvider({
-    email, 
-    password, 
+    email,
+    password,
     totpKey: totpKey || undefined,
     token: cachedToken?.token,
     tokenExpiresAtMs: cachedToken?.tokenExpiresAtMs,
     onTokenUpdate: (token, tokenExpiresAtMs) => {
       saveTokenCache(email, token, tokenExpiresAtMs);
-    }
+    },
   });
   const client = new MonarchGraphQLClient();
   cached = { auth, client };

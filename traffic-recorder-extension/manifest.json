@@ -3,13 +3,8 @@
   "name": "Monarch Money Traffic Recorder",
   "version": "0.0.1",
   "description": "Record Monarch Money GraphQL requests and responses in DevTools",
-  "permissions": [
-    "downloads",
-    "storage"
-  ],
-  "host_permissions": [
-    "https://app.monarchmoney.com/*"
-  ],
+  "permissions": ["downloads", "storage"],
+  "host_permissions": ["https://app.monarchmoney.com/*"],
   "devtools_page": "devtools.html",
   "action": {
     "default_popup": "",
@@ -25,4 +20,4 @@
     "48": "icons/icon48.png",
     "128": "icons/icon128.png"
   }
-} 
+}

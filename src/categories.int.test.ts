@@ -43,4 +43,3 @@ describe('integration: categories', () => {
     expect(category.group).toHaveProperty('groupLevelBudgetingEnabled');
   });
 });
-

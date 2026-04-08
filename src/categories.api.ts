@@ -83,11 +83,7 @@ export async function getBudgetCategoryGroups(
     }
   `;
 
-  const response = await client.request(
-    query,
-    auth,
-    GetBudgetCategoryGroupsResponseSchema,
-  );
+  const response = await client.request(query, auth, GetBudgetCategoryGroupsResponseSchema);
   return response.categoryGroups;
 }
 
@@ -133,12 +129,6 @@ export async function getBudgetCategory(
   `;
 
   const variables = { id: categoryId } as Record<string, unknown>;
-  const response = await client.request(
-    query,
-    auth,
-    GetBudgetCategoryResponseSchema,
-    variables,
-  );
+  const response = await client.request(query, auth, GetBudgetCategoryResponseSchema, variables);
   return response.category;
 }
-

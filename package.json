@@ -10,6 +10,10 @@
     "build": "tsc",
     "test": "vitest --run",
     "test:integration": "vitest --run -c vitest.integration.config.ts",
+    "lint": "eslint src/",
+    "lint:fix": "eslint src/ --fix",
+    "format": "prettier --write .",
+    "format:check": "prettier --check .",
     "clean": "rm -rf dist",
     "mmtraf": "tsx tools/mmtraf.ts"
   },
@@ -38,14 +42,20 @@
     "zod": "^3.25.76"
   },
   "devDependencies": {
+    "@eslint/js": "^10.0.1",
     "@types/node": "^20.0.0",
     "@vitest/coverage-v8": "^1.0.0",
     "commander": "^12.1.0",
     "dotenv": "^17.2.0",
+    "eslint": "^10.2.0",
+    "eslint-config-prettier": "^10.1.8",
+    "eslint-plugin-prettier": "^5.5.5",
+    "prettier": "^3.8.1",
     "quicktype-core": "^23.2.6",
     "stream-json": "^1.9.1",
     "tsx": "^4.0.0",
     "typescript": "^5.0.0",
+    "typescript-eslint": "^8.58.1",
     "vitest": "^1.0.0"
   }
 }

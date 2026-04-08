@@ -1,31 +1,92 @@
-# (WIP) Monarch Money API (TypeScript)
+# Monarch Money TypeScript API
 
-An unofficial TypeScript client for the Monarch Money API with comprehensive type definitions and modern development tools.
+[![npm version](https://img.shields.io/npm/v/monarch-money-ts.svg)](https://www.npmjs.com/package/monarch-money-ts)
+[![CI](https://github.com/chernetsov/monarch-money-ts/actions/workflows/ci.yml/badge.svg)](https://github.com/chernetsov/monarch-money-ts/actions/workflows/ci.yml)
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 
-## What makes this library unique?
+An unofficial TypeScript client for the [Monarch Money](https://www.monarchmoney.com/) API with comprehensive Zod-validated types.
 
-This library is built using an **AI-assisted agent workflow**. Instead of reverse-engineering APIs manually, users collect real traffic logs from Monarch Money using the provided browser extension. An AI assistant then analyzes these captured requests and responses to build, integrate, and validate the API schemas and client code. This approach ensures the TypeScript types accurately reflect the actual API behavior observed in production, and allows rapid iteration as the API evolves.
+> **Disclaimer:** This library is not affiliated with or endorsed by Monarch Money. It interacts with Monarch's internal GraphQL API, which may change without notice.
 
-- [Traffic Recorder Extension](./traffic-recorder-extension/README.md) — Capture GraphQL traffic from Monarch Money
-- [Traffic Analyzer Tool](./mmtraf.md) — Analyze and explore captured traffic logs
+## Installation
 
+```bash
+npm install monarch-money-ts
+# or
+pnpm add monarch-money-ts
+```
 
-## TODO till first version release
+## Quick Start
 
-- [ ] complete this readme
-- [ ] publish the first version to npm
+```typescript
+import { FixedTokenAuthProvider, MonarchGraphQLClient, getAccounts } from 'monarch-money-ts';
 
-## Versioning and publishing
+const auth = new FixedTokenAuthProvider('your-monarch-token');
+const client = new MonarchGraphQLClient();
 
-Manual versioning with GitHub CI publishing:
+const accounts = await getAccounts(auth, client);
+console.log(accounts);
+```
 
-1. Bump version and create tag locally:
-   - `npm version patch` (or `minor` / `major`)
-2. Push commit and tag:
-   - `git push --follow-tags`
-3. GitHub Actions publishes on `v*` tags.
+### Authentication
 
-Setup notes:
-- Remove `"private": true` from `package.json` before publishing.
-- Add `NPM_TOKEN` as a repository secret for the publish workflow.
- 
+The library provides two authentication strategies:
+
+**Fixed token** — use a token extracted from an active browser session:
+
+```typescript
+import { FixedTokenAuthProvider } from 'monarch-money-ts';
+
+const auth = new FixedTokenAuthProvider(process.env.MONARCH_TOKEN);
+```
+
+**Email/password** — logs in via Monarch's auth endpoint, with optional TOTP support:
+
+```typescript
+import { EmailPasswordAuthProvider } from 'monarch-money-ts';
+
+const auth = new EmailPasswordAuthProvider({
+  email: process.env.MONARCH_EMAIL,
+  password: process.env.MONARCH_PASSWORD,
+  totpKey: process.env.MONARCH_OTP_KEY, // optional
+});
+```
+
+Both implement the `AuthProvider` interface and can be passed to any API function.
+
+## Available APIs
+
+All API functions follow the same pattern: `apiFunction(auth, client, options?)`.
+
+| Domain           | Functions                                                | Description                                 |
+| ---------------- | -------------------------------------------------------- | ------------------------------------------- |
+| **Accounts**     | `getAccounts`                                            | List accounts with optional filters         |
+| **Transactions** | `getTransactions`, `getTransaction`, `updateTransaction` | Query, fetch, and update transactions       |
+| **Categories**   | `getCategories`                                          | List transaction categories                 |
+| **Budgets**      | `getBudgetReport`                                        | Retrieve budget data and spending summaries |
+| **Portfolio**    | `getPortfolio`                                           | Investment portfolio holdings               |
+| **Rules**        | `getRules`                                               | Transaction categorization rules            |
+
+Every response is validated at runtime with [Zod](https://zod.dev/) schemas, so you get both TypeScript types and runtime guarantees.
+
+## Type System
+
+The library exports both Zod schemas and inferred TypeScript types for all API responses:
+
+```typescript
+import { type Account, AccountSchema, type Transaction, TransactionSchema } from 'monarch-money-ts';
+```
+
+## How This Library Is Built
+
+This library uses an **AI-assisted agent workflow**. Instead of reverse-engineering APIs manually, real traffic logs are captured from Monarch Money using a [browser extension](./traffic-recorder-extension/README.md) and analyzed with the [traffic analyzer tool](./mmtraf.md). An AI assistant then builds and validates the API schemas and client code from the observed requests and responses.
+
+This ensures the TypeScript types accurately reflect actual API behavior and allows rapid iteration as the API evolves.
+
+## Contributing
+
+See [CONTRIBUTING.md](./CONTRIBUTING.md) for development setup, testing, and contribution guidelines.
+
+## License
+
+[MIT](./LICENSE)

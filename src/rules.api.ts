@@ -18,7 +18,7 @@ import {
  */
 export async function getTransactionRules(
   auth: AuthProvider,
-  client: MonarchGraphQLClient
+  client: MonarchGraphQLClient,
 ): Promise<TransactionRule[]> {
   const query = gql`
     query GetTransactionRules {
@@ -28,18 +28,14 @@ export async function getTransactionRules(
     }
   `;
 
-  const response = await client.request(
-    query,
-    auth,
-    GetTransactionRulesResponseSchema
-  );
+  const response = await client.request(query, auth, GetTransactionRulesResponseSchema);
   return response.transactionRules;
 }
 
 /**
  * Preview which transactions would be affected by a rule and what changes would be applied.
  * Useful for testing rule criteria before creating or updating a rule.
- * 
+ *
  * @param auth - Auth provider for the request
  * @param client - GraphQL client
  * @param rule - Rule definition to preview
@@ -50,7 +46,7 @@ export async function previewTransactionRule(
   auth: AuthProvider,
   client: MonarchGraphQLClient,
   rule: TransactionRulePreviewInput,
-  options?: PreviewTransactionRuleOptions
+  options?: PreviewTransactionRuleOptions,
 ): Promise<TransactionRulePreview> {
   const query = gql`
     query PreviewTransactionRule($rule: TransactionRulePreviewInput!, $offset: Int, $limit: Int) {
@@ -74,8 +70,7 @@ export async function previewTransactionRule(
     query,
     auth,
     PreviewTransactionRuleResponseSchema,
-    variables
+    variables,
   );
   return response.transactionRulePreview;
 }
-

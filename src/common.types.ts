@@ -22,7 +22,7 @@ export interface GraphQLErrorDetail {
 /**
  * Error thrown when a GraphQL request fails at the resolver level.
  * Preserves the structured error information from the GraphQL response.
- * 
+ *
  * @example
  * ```typescript
  * try {
@@ -61,7 +61,7 @@ export interface FieldError {
 /**
  * Structured error thrown when a Monarch API mutation fails with business logic errors.
  * Exposes the error code, message, and field-level errors for programmatic handling.
- * 
+ *
  * @example
  * ```typescript
  * try {
@@ -90,26 +90,32 @@ export class MonarchMutationError extends Error {
  * Zod schema for mutation error responses from the GraphQL API.
  * Used to validate the `errors` field in mutation responses.
  */
-export const MutationErrorSchema = z.object({
-  fieldErrors: z.array(z.object({
-    field: z.string(),
-    messages: z.array(z.string()),
+export const MutationErrorSchema = z
+  .object({
+    fieldErrors: z.array(
+      z.object({
+        field: z.string(),
+        messages: z.array(z.string()),
+        __typename: z.string().optional(),
+      }),
+    ),
+    message: z.string(),
+    code: z.string().nullable(),
     __typename: z.string().optional(),
-  })),
-  message: z.string(),
-  code: z.string().nullable(),
-  __typename: z.string().optional(),
-}).strict();
+  })
+  .strict();
 export type MutationError = z.infer<typeof MutationErrorSchema>;
 
 // ---------------- Shared Domain Objects ----------------
 // Types that don't have a dedicated domain module yet
 
-export const RecurringTransactionStreamSchema = z.object({
-  frequency: z.string(),
-  isActive: z.boolean(),
-  __typename: z.string().optional(),
-}).strict();
+export const RecurringTransactionStreamSchema = z
+  .object({
+    frequency: z.string(),
+    isActive: z.boolean(),
+    __typename: z.string().optional(),
+  })
+  .strict();
 export type RecurringTransactionStream = z.infer<typeof RecurringTransactionStreamSchema>;
 
 export const RECURRING_TRANSACTION_STREAM_FIELDS = `
@@ -118,14 +124,16 @@ export const RECURRING_TRANSACTION_STREAM_FIELDS = `
   __typename
 `;
 
-export const MerchantSchema = z.object({
-  name: z.string(),
-  id: z.string(),
-  transactionsCount: z.number(),
-  logoUrl: z.string().nullable(),
-  recurringTransactionStream: RecurringTransactionStreamSchema.nullable(),
-  __typename: z.string().optional(),
-}).strict();
+export const MerchantSchema = z
+  .object({
+    name: z.string(),
+    id: z.string(),
+    transactionsCount: z.number(),
+    logoUrl: z.string().nullable(),
+    recurringTransactionStream: RecurringTransactionStreamSchema.nullable(),
+    __typename: z.string().optional(),
+  })
+  .strict();
 export type Merchant = z.infer<typeof MerchantSchema>;
 
 export const MERCHANT_FIELDS = `
@@ -139,13 +147,15 @@ export const MERCHANT_FIELDS = `
   __typename
 `;
 
-export const TagSchema = z.object({
-  id: z.string(),
-  name: z.string(),
-  color: z.string(),
-  order: z.number(),
-  __typename: z.string().optional(),
-}).strict();
+export const TagSchema = z
+  .object({
+    id: z.string(),
+    name: z.string(),
+    color: z.string(),
+    order: z.number(),
+    __typename: z.string().optional(),
+  })
+  .strict();
 export type Tag = z.infer<typeof TagSchema>;
 
 export const TAG_FIELDS = `
@@ -160,11 +170,13 @@ export const TAG_FIELDS = `
  * Lightweight goal summary embedded in transactions.
  * For full goal details, use a dedicated goals API.
  */
-export const GoalSummarySchema = z.object({
-  id: z.string(),
-  name: z.string(),
-  __typename: z.string().optional(),
-}).strict();
+export const GoalSummarySchema = z
+  .object({
+    id: z.string(),
+    name: z.string(),
+    __typename: z.string().optional(),
+  })
+  .strict();
 export type GoalSummary = z.infer<typeof GoalSummarySchema>;
 
 export const GOAL_SUMMARY_FIELDS = `
@@ -177,10 +189,12 @@ export const GOAL_SUMMARY_FIELDS = `
  * Lightweight attachment summary embedded in transactions.
  * For full attachment details (url, filename, etc.), use a dedicated attachments API.
  */
-export const AttachmentSummarySchema = z.object({
-  id: z.string(),
-  __typename: z.string().optional(),
-}).strict();
+export const AttachmentSummarySchema = z
+  .object({
+    id: z.string(),
+    __typename: z.string().optional(),
+  })
+  .strict();
 export type AttachmentSummary = z.infer<typeof AttachmentSummarySchema>;
 
 export const ATTACHMENT_SUMMARY_FIELDS = `
@@ -192,12 +206,14 @@ export const ATTACHMENT_SUMMARY_FIELDS = `
  * Lightweight user summary for household member references.
  * Embedded in transactions and accounts when showing ownership.
  */
-export const UserSummarySchema = z.object({
-  id: z.string(),
-  displayName: z.string().nullable(),
-  profilePictureUrl: z.string().nullable(),
-  __typename: z.string().optional(),
-}).strict();
+export const UserSummarySchema = z
+  .object({
+    id: z.string(),
+    displayName: z.string().nullable(),
+    profilePictureUrl: z.string().nullable(),
+    __typename: z.string().optional(),
+  })
+  .strict();
 export type UserSummary = z.infer<typeof UserSummarySchema>;
 
 export const USER_SUMMARY_FIELDS = `
@@ -206,4 +222,3 @@ export const USER_SUMMARY_FIELDS = `
   profilePictureUrl
   __typename
 `;
-

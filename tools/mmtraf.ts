@@ -15,7 +15,9 @@ import { InputData, jsonInputForTargetLanguage, quicktype } from 'quicktype-core
 
 // CJS interop: these modules export defaults with helper properties
 const { parser } = StreamJson as unknown as { parser: (opts?: any) => NodeJS.ReadWriteStream };
-const { streamArray } = StreamArrayMod as unknown as { streamArray: (opts?: any) => NodeJS.ReadWriteStream };
+const { streamArray } = StreamArrayMod as unknown as {
+  streamArray: (opts?: any) => NodeJS.ReadWriteStream;
+};
 
 // Utilities
 const TRAFFIC_DIR = path.resolve(process.cwd(), 'traffic');
@@ -31,14 +33,11 @@ function formatBytes(bytes: number): string {
   return `${n.toFixed(n < 10 && i > 0 ? 1 : 0)} ${units[i]}`;
 }
 
-function maskHeaders(headers: Array<{ name: string; value: string }>): Array<{ name: string; value: string }>{
-  const SENSITIVE = new Set([
-    'authorization',
-    'x-api-key',
-    'x-auth-token',
-    'cookie'
-  ]);
-  return (headers || []).map(h => {
+function maskHeaders(
+  headers: Array<{ name: string; value: string }>,
+): Array<{ name: string; value: string }> {
+  const SENSITIVE = new Set(['authorization', 'x-api-key', 'x-auth-token', 'cookie']);
+  return (headers || []).map((h) => {
     const nameLower = (h?.name || '').toLowerCase();
     if (SENSITIVE.has(nameLower)) {
       return { name: h.name, value: '***REDACTED***' };
@@ -56,7 +55,9 @@ function omittedString(body: unknown, label?: string, see?: string[]): string | 
   return `<<${head}>>${refs}`;
 }
 
-async function listTrafficFiles(): Promise<Array<{ file: string; path: string; size: number; count: number }>> {
+async function listTrafficFiles(): Promise<
+  Array<{ file: string; path: string; size: number; count: number }>
+> {
   const results: Array<{ file: string; path: string; size: number; count: number }> = [];
   let entries: string[] = [];
   try {
@@ -65,7 +66,7 @@ async function listTrafficFiles(): Promise<Array<{ file: string; path: string; s
     throw new Error(`Traffic directory not found: ${TRAFFIC_DIR}`);
   }
 
-  const jsonFiles = entries.filter(e => e.endsWith('.json'));
+  const jsonFiles = entries.filter((e) => e.endsWith('.json'));
   for (const file of jsonFiles) {
     const full = path.join(TRAFFIC_DIR, file);
     const stat = await fs.stat(full);
@@ -78,7 +79,9 @@ async function listTrafficFiles(): Promise<Array<{ file: string; path: string; s
 async function countJsonArrayItems(fullPath: string): Promise<number> {
   const input = createReadStream(fullPath);
   let count = 0;
-  const pipelineStreams: Array<NodeJS.ReadableStream | NodeJS.ReadWriteStream> = [input as NodeJS.ReadableStream];
+  const pipelineStreams: Array<NodeJS.ReadableStream | NodeJS.ReadWriteStream> = [
+    input as NodeJS.ReadableStream,
+  ];
   pipelineStreams.push(parser());
   pipelineStreams.push(streamArray());
 
@@ -89,7 +92,7 @@ async function countJsonArrayItems(fullPath: string): Promise<number> {
       for await (const _ of source) {
         count++;
       }
-    }
+    },
   );
   return count;
 }
@@ -131,12 +134,15 @@ async function showRecord(fileBase: string, index: number): Promise<void> {
     url: found.url,
     method: found.method,
     requestHeaders: maskHeaders(found.requestHeaders || []),
-    requestBody: omittedString(found.requestBody, 'request body', ['body:req-at', 'graphql:req-at']),
+    requestBody: omittedString(found.requestBody, 'request body', [
+      'body:req-at',
+      'graphql:req-at',
+    ]),
     status: found.status,
     responseHeaders: maskHeaders(found.responseHeaders || []),
     responseBody: omittedString(found.responseBody, 'response body', ['body:res-at']),
     time: found.time,
-    timestamp: found.timestamp
+    timestamp: found.timestamp,
   };
 
   // Pretty print minimal safe object
@@ -145,10 +151,7 @@ async function showRecord(fileBase: string, index: number): Promise<void> {
 
 // CLI
 const program = new Command();
-program
-  .name('mmtraf')
-  .description('Monarch Money traffic recordings analyzer')
-  .version('0.1.0');
+program.name('mmtraf').description('Monarch Money traffic recordings analyzer').version('0.1.0');
 
 program
   .command('list')
@@ -159,7 +162,7 @@ program
       console.log('No traffic files found in', TRAFFIC_DIR);
       return;
     }
-    const data = rows.map(r => ({ file: r.file, size: formatBytes(r.size), count: r.count }));
+    const data = rows.map((r) => ({ file: r.file, size: formatBytes(r.size), count: r.count }));
     console.table(data);
   });
 
@@ -178,13 +181,21 @@ program
 
 // ---------------- Schema inference ----------------
 // quicktype helpers
-async function quicktypeFromSample(name: string, sample: unknown, target: 'schema' | 'typescript'): Promise<string> {
+async function quicktypeFromSample(
+  name: string,
+  sample: unknown,
+  target: 'schema' | 'typescript',
+): Promise<string> {
   const jsonInput = jsonInputForTargetLanguage(target === 'schema' ? 'schema' : 'typescript');
   const text = typeof sample === 'string' ? sample : JSON.stringify(sample ?? null);
   await jsonInput.addSource({ name, samples: [text] });
   const inputData = new InputData();
   inputData.addInput(jsonInput);
-  const result = await quicktype({ inputData, lang: target === 'schema' ? 'schema' : 'typescript', rendererOptions: target === 'typescript' ? { 'just-types': 'true' } : {} });
+  const result = await quicktype({
+    inputData,
+    lang: target === 'schema' ? 'schema' : 'typescript',
+    rendererOptions: target === 'typescript' ? { 'just-types': 'true' } : {},
+  });
   return result.lines.join('\n');
 }
 
@@ -194,12 +205,19 @@ function tryParseJsonString(s: unknown): unknown {
   const trimmed = s.trim();
   if (!trimmed) return null;
   if (trimmed.startsWith('{') || trimmed.startsWith('[')) {
-    try { return JSON.parse(trimmed); } catch { /* fallthrough */ }
+    try {
+      return JSON.parse(trimmed);
+    } catch {
+      /* fallthrough */
+    }
   }
   return s; // keep as string if not JSON
 }
 
-function headerValue(headers: Array<{ name: string; value: string }>, find: string): string | undefined {
+function headerValue(
+  headers: Array<{ name: string; value: string }>,
+  find: string,
+): string | undefined {
   const f = find.toLowerCase();
   for (const h of headers || []) {
     if ((h?.name || '').toLowerCase() === f) return h.value;
@@ -209,20 +227,26 @@ function headerValue(headers: Array<{ name: string; value: string }>, find: stri
 
 // -------- small helpers for reuse --------
 function resolveTrafficPath(file: string): string {
-  if (path.isAbsolute(file)) throw new Error('Provide a bare filename under traffic/ (no absolute paths)');
-  if (file.includes(path.sep)) throw new Error('Provide a bare filename under traffic/ (no relative paths)');
+  if (path.isAbsolute(file))
+    throw new Error('Provide a bare filename under traffic/ (no absolute paths)');
+  if (file.includes(path.sep))
+    throw new Error('Provide a bare filename under traffic/ (no relative paths)');
   if (!file.endsWith('.json')) throw new Error('Filename must end with .json');
-  if (file.endsWith('.json.gz')) throw new Error('Gzipped files are not supported. Use a .json file.');
+  if (file.endsWith('.json.gz'))
+    throw new Error('Gzipped files are not supported. Use a .json file.');
   return path.join(TRAFFIC_DIR, file);
 }
 
 function parseIndex(idx: string): number {
   const index = Number(idx);
-  if (!Number.isInteger(index) || index < 0) throw new Error('Index must be a non-negative integer');
+  if (!Number.isInteger(index) || index < 0)
+    throw new Error('Index must be a non-negative integer');
   return index;
 }
 
-function contentTypeFromHeaders(headers: Array<{ name: string; value: string }> | undefined): string {
+function contentTypeFromHeaders(
+  headers: Array<{ name: string; value: string }> | undefined,
+): string {
   return headerValue(headers || [], 'content-type') || '';
 }
 
@@ -230,14 +254,22 @@ function parseBodyUsingContentType(body: unknown, contentType: string): unknown 
   let parsed: unknown = body;
   if (typeof body === 'string') {
     const trimmed = body.trim();
-    if (contentType.includes('application/json') || trimmed.startsWith('{') || trimmed.startsWith('[')) {
+    if (
+      contentType.includes('application/json') ||
+      trimmed.startsWith('{') ||
+      trimmed.startsWith('[')
+    ) {
       parsed = tryParseJsonString(body);
     }
   }
   return parsed;
 }
 
-async function withRecord(file: string, idx: string, fn: (rec: any) => Promise<void> | void): Promise<void> {
+async function withRecord(
+  file: string,
+  idx: string,
+  fn: (rec: any) => Promise<void> | void,
+): Promise<void> {
   const index = parseIndex(idx);
   const full = resolveTrafficPath(file);
   const rec = await readRecord(full, index);
@@ -291,7 +323,9 @@ program
 
 program
   .command('body:req-at')
-  .description('Output parsed request body at a specific index (JSON for jq). GraphQL query is omitted; use graphql:req-at to view it')
+  .description(
+    'Output parsed request body at a specific index (JSON for jq). GraphQL query is omitted; use graphql:req-at to view it',
+  )
   .argument('<file>', 'Filename under traffic/ (.json)')
   .argument('<index>', 'Zero-based index of entry')
   .action(async (file: string, idx: string) => {
@@ -307,7 +341,10 @@ program
       }
       // If raw GraphQL body (application/graphql), emit a redaction note with size
       if (typeof rec?.requestBody === 'string' && ctype.includes('application/graphql')) {
-        process.stdout.write(JSON.stringify(omittedString(rec?.requestBody, 'GraphQL query', ['graphql:req-at'])) + '\n');
+        process.stdout.write(
+          JSON.stringify(omittedString(rec?.requestBody, 'GraphQL query', ['graphql:req-at'])) +
+            '\n',
+        );
         return;
       }
       process.stdout.write(JSON.stringify(body ?? null) + '\n');
@@ -376,7 +413,8 @@ program
         const rec = chunk.value;
         const reqCtype = contentTypeFromHeaders(rec?.requestHeaders || []);
         const parsedReq = parseBodyUsingContentType(rec?.requestBody, reqCtype) as any;
-        const opName: string | undefined = typeof parsedReq?.operationName === 'string' ? parsedReq.operationName : undefined;
+        const opName: string | undefined =
+          typeof parsedReq?.operationName === 'string' ? parsedReq.operationName : undefined;
         const reqSize = byteSizeOf(rec?.requestBody);
         const resSize = byteSizeOf(rec?.responseBody);
         const totalSize = reqSize + resSize;
@@ -428,7 +466,7 @@ function safeDestroy(stream: unknown): void {
   }
 }
 
-program.parseAsync().catch(err => {
+program.parseAsync().catch((err) => {
   console.error(err?.message || err);
   process.exitCode = 1;
 });

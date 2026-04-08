@@ -67,6 +67,7 @@ The exported JSON file contains an array of request objects:
 ## Target Domain
 
 This extension is configured to work with:
+
 - `https://app.monarchmoney.com/*`
 
 ## Development

@@ -2,7 +2,7 @@ name: ci
 
 on:
   push:
-    branches: ["main"]
+    branches: ['main']
   pull_request:
 
 jobs:
@@ -15,10 +15,14 @@ jobs:
           version: 9
       - uses: actions/setup-node@v4
         with:
-          node-version: 20
+          node-version: 22
           cache: pnpm
       - name: Install
         run: pnpm install --frozen-lockfile
+      - name: Lint
+        run: pnpm lint
+      - name: Format check
+        run: pnpm format:check
       - name: Test
         run: pnpm test -- --passWithNoTests
       - name: Build

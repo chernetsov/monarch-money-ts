@@ -1,5 +1,5 @@
 import fetch from 'node-fetch';
-import { TOTP } from "totp-generator"
+import { TOTP } from 'totp-generator';
 import { z } from 'zod';
 
 /**
@@ -38,13 +38,15 @@ export class FixedTokenAuthProvider implements AuthProvider {
  */
 const LOGIN_ENDPOINT = 'https://api.monarch.com/auth/login/';
 
-export const LoginResponseSchema = z.object({
-  token: z.string(),
-  tokenExpiration: z.string(),
-  id: z.string(),
-  email: z.string(),
-  name: z.string(),
-}).passthrough();
+export const LoginResponseSchema = z
+  .object({
+    token: z.string(),
+    tokenExpiration: z.string(),
+    id: z.string(),
+    email: z.string(),
+    name: z.string(),
+  })
+  .passthrough();
 
 export type LoginResponse = z.infer<typeof LoginResponseSchema>;
 
@@ -76,7 +78,7 @@ const loginRequest = async (params: LoginParams): Promise<LoginResponse> => {
 
   const response = await fetch(LOGIN_ENDPOINT, {
     method: 'POST',
-    headers: headers as any,
+    headers: headers as Record<string, string>,
     body: JSON.stringify(body),
   });
 
@@ -99,8 +101,11 @@ const loginRequest = async (params: LoginParams): Promise<LoginResponse> => {
   let json: unknown;
   try {
     json = JSON.parse(raw) as unknown;
-  } catch (e) {
-    throw new Error(`Login response was not valid JSON: ${e instanceof Error ? e.message : String(e)}`);
+  } catch (cause) {
+    throw new Error(
+      `Login response was not valid JSON: ${cause instanceof Error ? cause.message : String(cause)}`,
+      { cause },
+    );
   }
 
   const parsed = LoginResponseSchema.safeParse(json);
@@ -114,7 +119,10 @@ const loginRequest = async (params: LoginParams): Promise<LoginResponse> => {
 /**
  * Callback invoked when a token is updated.
  */
-export type TokenUpdateCallback = (token: string, tokenExpiresAtMs: number | undefined) => void | Promise<void>;
+export type TokenUpdateCallback = (
+  token: string,
+  tokenExpiresAtMs: number | undefined,
+) => void | Promise<void>;
 
 /**
  * Thrown when the login endpoint returns 429 Too Many Requests.
@@ -130,8 +138,8 @@ export class LoginThrottledError extends Error {
     const minutes = Math.ceil(cooldownMs / 60_000);
     super(
       `Login rate-limited by Monarch (429). ` +
-      `Will not retry for ${minutes} minute(s). ` +
-      `If this persists, extract a token from an active browser session or contact Monarch support.`
+        `Will not retry for ${minutes} minute(s). ` +
+        `If this persists, extract a token from an active browser session or contact Monarch support.`,
     );
     this.name = 'LoginThrottledError';
     this.retryAfterMs = retryAfterMs;
@@ -152,15 +160,15 @@ export class EmailPasswordAuthProvider implements AuthProvider {
 
   private token?: string;
   private tokenExpiresAtMs?: number;
-  
+
   private readonly refreshSkewMs: number = 60_000;
 
   private loginCooldownUntilMs: number = 0;
   private lastLoginError?: Error;
 
-  constructor(params: { 
-    email: string; 
-    password: string; 
+  constructor(params: {
+    email: string;
+    password: string;
     totpKey?: string;
     token?: string;
     tokenExpiresAtMs?: number;
@@ -197,8 +205,8 @@ export class EmailPasswordAuthProvider implements AuthProvider {
       const remainingSec = Math.ceil((this.loginCooldownUntilMs - Date.now()) / 1000);
       throw new Error(
         `Login is in cooldown (${remainingSec}s remaining) due to previous failure: ` +
-        `${this.lastLoginError?.message ?? 'unknown'}. ` +
-        `Provide a valid token directly to bypass.`
+          `${this.lastLoginError?.message ?? 'unknown'}. ` +
+          `Provide a valid token directly to bypass.`,
       );
     }
 
@@ -207,8 +215,11 @@ export class EmailPasswordAuthProvider implements AuthProvider {
       try {
         const generated = await TOTP.generate(this.totpKey);
         totpCode = generated.otp;
-      } catch (e) {
-        throw new Error(`Failed to generate TOTP: ${e instanceof Error ? e.message : 'Unknown error'}`);
+      } catch (cause) {
+        throw new Error(
+          `Failed to generate TOTP: ${cause instanceof Error ? cause.message : 'Unknown error'}`,
+          { cause },
+        );
       }
     }
 
@@ -225,11 +236,11 @@ export class EmailPasswordAuthProvider implements AuthProvider {
       this.token = login.token;
       const expiresAt = Date.parse(login.tokenExpiration);
       this.tokenExpiresAtMs = !Number.isNaN(expiresAt) ? expiresAt : undefined;
-    
+
       if (this.onTokenUpdate) {
         await this.onTokenUpdate(this.token, this.tokenExpiresAtMs);
       }
-    
+
       return login.token;
     } catch (e) {
       if (e instanceof LoginThrottledError) {
@@ -254,7 +265,7 @@ export class EmailPasswordAuthProvider implements AuthProvider {
  */
 export const buildAuthHeaders = (
   token: string,
-  extra?: Record<string, string>
+  extra?: Record<string, string>,
 ): Record<string, string> => {
   const base: Record<string, string> = {
     Accept: 'application/json',
@@ -265,5 +276,3 @@ export const buildAuthHeaders = (
   };
   return { ...base, ...(extra || {}) };
 };
-
-

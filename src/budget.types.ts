@@ -1,17 +1,17 @@
-import { z } from "zod";
+import { z } from 'zod';
 
 // ==================== Enums ====================
 
-export const BudgetVariabilitySchema = z.enum(["fixed", "flexible"]);
+export const BudgetVariabilitySchema = z.enum(['fixed', 'flexible']);
 export type BudgetVariability = z.infer<typeof BudgetVariabilitySchema>;
 
-export const RolloverTypeSchema = z.enum(["monthly"]);
+export const RolloverTypeSchema = z.enum(['monthly']);
 export type RolloverType = z.infer<typeof RolloverTypeSchema>;
 
-export const BudgetSystemSchema = z.enum(["groups_and_categories"]);
+export const BudgetSystemSchema = z.enum(['groups_and_categories']);
 export type BudgetSystem = z.infer<typeof BudgetSystemSchema>;
 
-export const CategoryGroupTypeSchema = z.enum(["income", "expense", "transfer"]);
+export const CategoryGroupTypeSchema = z.enum(['income', 'expense', 'transfer']);
 export type CategoryGroupType = z.infer<typeof CategoryGroupTypeSchema>;
 
 // ==================== Budget Rollover Period ====================
@@ -25,7 +25,7 @@ export const BudgetRolloverPeriodSchema = z
     targetAmount: z.number().nullable(),
     frequency: RolloverTypeSchema.nullable(),
     type: RolloverTypeSchema,
-    __typename: z.literal("BudgetRolloverPeriod").optional(),
+    __typename: z.literal('BudgetRolloverPeriod').optional(),
   })
   .strict();
 
@@ -49,7 +49,7 @@ export const BudgetReportCategoryGroupRefSchema = z
     type: CategoryGroupTypeSchema,
     budgetVariability: BudgetVariabilitySchema.nullable(),
     groupLevelBudgetingEnabled: z.boolean(),
-    __typename: z.literal("CategoryGroup").optional(),
+    __typename: z.literal('CategoryGroup').optional(),
   })
   .strict();
 
@@ -67,7 +67,7 @@ export const BudgetReportCategorySchema = z
     updatedAt: z.string(),
     group: BudgetReportCategoryGroupRefSchema,
     rolloverPeriod: BudgetRolloverPeriodSchema.nullable(),
-    __typename: z.literal("Category").optional(),
+    __typename: z.literal('Category').optional(),
   })
   .strict();
 
@@ -106,7 +106,7 @@ export const BudgetReportCategoryGroupSchema = z
     groupLevelBudgetingEnabled: z.boolean(),
     categories: z.array(BudgetReportCategorySchema),
     rolloverPeriod: BudgetRolloverPeriodSchema.nullable(),
-    __typename: z.literal("CategoryGroup").optional(),
+    __typename: z.literal('CategoryGroup').optional(),
   })
   .strict();
 
@@ -147,7 +147,7 @@ export const BudgetMonthlyAmountsSchema = z
     rolloverType: RolloverTypeSchema.nullable(),
     cumulativeActualAmount: z.number(),
     rolloverTargetAmount: z.number().nullable(),
-    __typename: z.literal("BudgetMonthlyAmounts").optional(),
+    __typename: z.literal('BudgetMonthlyAmounts').optional(),
   })
   .strict();
 
@@ -170,7 +170,7 @@ export const BUDGET_MONTHLY_AMOUNTS_FIELDS = `
 export const CategoryRefSchema = z
   .object({
     id: z.string(),
-    __typename: z.literal("Category").optional(),
+    __typename: z.literal('Category').optional(),
   })
   .strict();
 
@@ -180,13 +180,11 @@ export const BudgetCategoryMonthlyAmountsSchema = z
   .object({
     category: CategoryRefSchema,
     monthlyAmounts: z.array(BudgetMonthlyAmountsSchema),
-    __typename: z.literal("BudgetCategoryMonthlyAmounts").optional(),
+    __typename: z.literal('BudgetCategoryMonthlyAmounts').optional(),
   })
   .strict();
 
-export type BudgetCategoryMonthlyAmounts = z.infer<
-  typeof BudgetCategoryMonthlyAmountsSchema
->;
+export type BudgetCategoryMonthlyAmounts = z.infer<typeof BudgetCategoryMonthlyAmountsSchema>;
 
 export const BUDGET_CATEGORY_MONTHLY_AMOUNTS_FIELDS = `
   category {
@@ -202,7 +200,7 @@ export const BUDGET_CATEGORY_MONTHLY_AMOUNTS_FIELDS = `
 export const CategoryGroupRefSchema = z
   .object({
     id: z.string(),
-    __typename: z.literal("CategoryGroup").optional(),
+    __typename: z.literal('CategoryGroup').optional(),
   })
   .strict();
 
@@ -212,7 +210,7 @@ export const BudgetCategoryGroupMonthlyAmountsSchema = z
   .object({
     categoryGroup: CategoryGroupRefSchema,
     monthlyAmounts: z.array(BudgetMonthlyAmountsSchema),
-    __typename: z.literal("BudgetCategoryGroupMonthlyAmounts").optional(),
+    __typename: z.literal('BudgetCategoryGroupMonthlyAmounts').optional(),
   })
   .strict();
 
@@ -235,7 +233,7 @@ export const BudgetFlexMonthlyAmountsSchema = z
   .object({
     budgetVariability: BudgetVariabilitySchema,
     monthlyAmounts: z.array(BudgetMonthlyAmountsSchema),
-    __typename: z.literal("BudgetFlexMonthlyAmounts").optional(),
+    __typename: z.literal('BudgetFlexMonthlyAmounts').optional(),
   })
   .strict();
 
@@ -256,7 +254,7 @@ export const BudgetTotalsSchema = z
     plannedAmount: z.number(),
     previousMonthRolloverAmount: z.number(),
     remainingAmount: z.number(),
-    __typename: z.literal("BudgetTotals").optional(),
+    __typename: z.literal('BudgetTotals').optional(),
   })
   .strict();
 
@@ -279,7 +277,7 @@ export const BudgetMonthTotalsSchema = z
     totalFixedExpenses: BudgetTotalsSchema,
     totalNonMonthlyExpenses: BudgetTotalsSchema,
     totalFlexibleExpenses: BudgetTotalsSchema,
-    __typename: z.literal("BudgetMonthTotals").optional(),
+    __typename: z.literal('BudgetMonthTotals').optional(),
   })
   .strict();
 
@@ -312,7 +310,7 @@ export const BudgetDataSchema = z
     monthlyAmountsByCategoryGroup: z.array(BudgetCategoryGroupMonthlyAmountsSchema),
     monthlyAmountsForFlexExpense: BudgetFlexMonthlyAmountsSchema,
     totalsByMonth: z.array(BudgetMonthTotalsSchema),
-    __typename: z.literal("BudgetData").optional(),
+    __typename: z.literal('BudgetData').optional(),
   })
   .strict();
 
@@ -339,7 +337,7 @@ export const GoalV2MonthlyContributionSummarySchema = z
   .object({
     month: z.string(),
     sum: z.number(),
-    __typename: z.literal("GoalV2MonthlyContributionSummary").optional(),
+    __typename: z.literal('GoalV2MonthlyContributionSummary').optional(),
   })
   .strict();
 
@@ -352,7 +350,7 @@ export const GoalV2PlannedContributionSchema = z
     id: z.string(),
     month: z.string(),
     amount: z.number(),
-    __typename: z.literal("GoalV2PlannedContribution").optional(),
+    __typename: z.literal('GoalV2PlannedContribution').optional(),
   })
   .strict();
 
@@ -369,7 +367,7 @@ export const GoalV2Schema = z
     imageStorageProviderId: z.string(),
     plannedContributions: z.array(GoalV2PlannedContributionSchema),
     monthlyContributionSummaries: z.array(GoalV2MonthlyContributionSummarySchema),
-    __typename: z.literal("GoalV2").optional(),
+    __typename: z.literal('GoalV2').optional(),
   })
   .strict();
 
@@ -408,7 +406,7 @@ export const SavingsGoalSchema = z
     targetDate: z.string().nullable(),
     imageStorageProvider: z.string(),
     imageStorageProviderId: z.string(),
-    __typename: z.literal("SavingsGoal").optional(),
+    __typename: z.literal('SavingsGoal').optional(),
   })
   .strict();
 
@@ -421,7 +419,7 @@ export const SavingsGoalMonthlyAmountSchema = z
     plannedAmount: z.number(),
     actualAmount: z.number(),
     remainingAmount: z.number(),
-    __typename: z.literal("SavingsGoalMonthlyAmount").optional(),
+    __typename: z.literal('SavingsGoalMonthlyAmount').optional(),
   })
   .strict();
 
@@ -432,13 +430,11 @@ export const SavingsGoalMonthlyBudgetAmountsSchema = z
     id: z.string(),
     savingsGoal: SavingsGoalSchema,
     monthlyAmounts: z.array(SavingsGoalMonthlyAmountSchema),
-    __typename: z.literal("SavingsGoalMonthlyBudgetAmounts").optional(),
+    __typename: z.literal('SavingsGoalMonthlyBudgetAmounts').optional(),
   })
   .strict();
 
-export type SavingsGoalMonthlyBudgetAmounts = z.infer<
-  typeof SavingsGoalMonthlyBudgetAmountsSchema
->;
+export type SavingsGoalMonthlyBudgetAmounts = z.infer<typeof SavingsGoalMonthlyBudgetAmountsSchema>;
 
 export const SAVINGS_GOAL_MONTHLY_BUDGET_AMOUNTS_FIELDS = `
   id
@@ -484,7 +480,7 @@ export const BudgetStatusSchema = z
     hasBudget: z.boolean(),
     hasTransactions: z.boolean(),
     willCreateBudgetFromEmptyDefaultCategories: z.boolean(),
-    __typename: z.literal("BudgetStatus").optional(),
+    __typename: z.literal('BudgetStatus').optional(),
   })
   .strict();
 
@@ -503,7 +499,7 @@ export const FlexExpenseRolloverPeriodSchema = z
     id: z.string(),
     startMonth: z.string(),
     startingBalance: z.number(),
-    __typename: z.literal("FlexExpenseRolloverPeriod").optional(),
+    __typename: z.literal('FlexExpenseRolloverPeriod').optional(),
   })
   .strict();
 
@@ -530,4 +526,3 @@ export interface BudgetReportInput {
   /** End month in YYYY-MM-DD format (e.g., "2026-03-01") */
   endDate: string;
 }
-

@@ -5,10 +5,9 @@ import type { ZodType } from 'zod';
 import { MonarchGraphQLError, type GraphQLErrorDetail } from './common.types.js';
 
 export class MonarchGraphQLClient {
-
   private readonly client: GraphQLClient;
 
-  constructor(endpoint: string = "https://api.monarch.com/graphql") {
+  constructor(endpoint: string = 'https://api.monarch.com/graphql') {
     this.client = new GraphQLClient(endpoint);
   }
 
@@ -27,7 +26,7 @@ export class MonarchGraphQLClient {
     query: string,
     auth: AuthProvider,
     schema: ZodType<T, any, any>,
-    variables?: Record<string, unknown>
+    variables?: Record<string, unknown>,
   ): Promise<T> {
     try {
       const token = await auth.getToken();
@@ -55,7 +54,7 @@ export class MonarchGraphQLClient {
   private wrapError(err: unknown): Error {
     const anyErr = err as any;
     const response = anyErr?.response;
-    
+
     if (response && Array.isArray(response.errors) && response.errors.length > 0) {
       const status = response.status ?? response.http?.status ?? 'unknown';
       const errors: GraphQLErrorDetail[] = response.errors.map((e: any) => ({
@@ -63,14 +62,13 @@ export class MonarchGraphQLClient {
         locations: e?.locations,
         path: e?.path,
       }));
-      const message = errors.map(e => e.message).join('; ');
+      const message = errors.map((e) => e.message).join('; ');
       return new MonarchGraphQLError(message, status, errors);
     }
-    
+
     if (anyErr instanceof Error) {
       return new Error(`GraphQL request failed: ${anyErr.message}`);
     }
     return new Error('GraphQL request failed with an unknown error');
   }
-  
 }

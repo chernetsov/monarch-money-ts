@@ -1,49 +1,33 @@
 import { z } from 'zod';
-import {
-  CategorySummarySchema,
-  CATEGORY_SUMMARY_FIELDS,
-  type CategorySummary,
-} from './categories.types.js';
-import {
-  AccountSummarySchema,
-  ACCOUNT_SUMMARY_FIELDS,
-  type AccountSummary,
-} from './accounts.types.js';
+import { CategorySummarySchema, CATEGORY_SUMMARY_FIELDS } from './categories.types.js';
+import { AccountSummarySchema, ACCOUNT_SUMMARY_FIELDS } from './accounts.types.js';
 import {
   MerchantSchema,
   MERCHANT_FIELDS,
-  type Merchant,
   TagSchema,
   TAG_FIELDS,
-  type Tag,
   GoalSummarySchema,
   GOAL_SUMMARY_FIELDS,
-  type GoalSummary,
   AttachmentSummarySchema,
   ATTACHMENT_SUMMARY_FIELDS,
-  type AttachmentSummary,
   UserSummarySchema,
   USER_SUMMARY_FIELDS,
-  type UserSummary,
   MutationErrorSchema,
-  type MutationError,
 } from './common.types.js';
-import {
-  TransactionRuleSummarySchema,
-  TRANSACTION_RULE_SUMMARY_FIELDS,
-  type TransactionRuleSummary,
-} from './rules.types.js';
+import { TransactionRuleSummarySchema } from './rules.types.js';
 
 // ---------------- Transaction ----------------
 
 /**
  * Savings goal event embedded in transaction responses.
  */
-export const SavingsGoalEventSchema = z.object({
-  id: z.string(),
-  goal: GoalSummarySchema,
-  __typename: z.string().optional(),
-}).strict();
+export const SavingsGoalEventSchema = z
+  .object({
+    id: z.string(),
+    goal: GoalSummarySchema,
+    __typename: z.string().optional(),
+  })
+  .strict();
 export type SavingsGoalEvent = z.infer<typeof SavingsGoalEventSchema>;
 
 export const SAVINGS_GOAL_EVENT_FIELDS = `
@@ -54,41 +38,43 @@ export const SAVINGS_GOAL_EVENT_FIELDS = `
   __typename
 `;
 
-export const TransactionSchema = z.object({
-  id: z.string(),
-  amount: z.number(),
-  pending: z.boolean(),
-  date: z.string(), // YYYY-MM-DD format
-  hideFromReports: z.boolean(),
-  hiddenByAccount: z.boolean(),
-  plaidName: z.string(),
-  notes: z.string().nullable(),
-  isRecurring: z.boolean(),
-  reviewStatus: z.string().nullable(),
-  needsReview: z.boolean(),
-  reviewedAt: z.string().nullable(), // ISO 8601 timestamp
-  reviewedByUser: UserSummarySchema.nullable(),
-  isSplitTransaction: z.boolean(),
-  dataProviderDescription: z.string(),
-  attachments: z.array(AttachmentSummarySchema),
-  goal: GoalSummarySchema.nullable(),
-  category: CategorySummarySchema,
-  merchant: MerchantSchema,
-  tags: z.array(TagSchema),
-  account: AccountSummarySchema,
-  savingsGoalEvent: SavingsGoalEventSchema.nullable(),
-  ownedByUser: UserSummarySchema.nullable(),
-  // Additional fields from detailed transaction view (getTransaction query)
-  originalDate: z.string().optional(), // YYYY-MM-DD format
-  hasSplitTransactions: z.boolean().optional(),
-  isManual: z.boolean().optional(),
-  updatedByRetailSync: z.boolean().optional(),
-  splitTransactions: z.array(z.unknown()).optional(), // Array of split transaction references
-  originalTransaction: z.unknown().optional(), // Original transaction reference if this is a correction
-  needsReviewByUser: UserSummarySchema.nullable().optional(),
-  ownershipOverriddenAt: z.string().nullable().optional(), // ISO 8601 timestamp
-  __typename: z.string().optional(),
-}).strict();
+export const TransactionSchema = z
+  .object({
+    id: z.string(),
+    amount: z.number(),
+    pending: z.boolean(),
+    date: z.string(), // YYYY-MM-DD format
+    hideFromReports: z.boolean(),
+    hiddenByAccount: z.boolean(),
+    plaidName: z.string(),
+    notes: z.string().nullable(),
+    isRecurring: z.boolean(),
+    reviewStatus: z.string().nullable(),
+    needsReview: z.boolean(),
+    reviewedAt: z.string().nullable(), // ISO 8601 timestamp
+    reviewedByUser: UserSummarySchema.nullable(),
+    isSplitTransaction: z.boolean(),
+    dataProviderDescription: z.string(),
+    attachments: z.array(AttachmentSummarySchema),
+    goal: GoalSummarySchema.nullable(),
+    category: CategorySummarySchema,
+    merchant: MerchantSchema,
+    tags: z.array(TagSchema),
+    account: AccountSummarySchema,
+    savingsGoalEvent: SavingsGoalEventSchema.nullable(),
+    ownedByUser: UserSummarySchema.nullable(),
+    // Additional fields from detailed transaction view (getTransaction query)
+    originalDate: z.string().optional(), // YYYY-MM-DD format
+    hasSplitTransactions: z.boolean().optional(),
+    isManual: z.boolean().optional(),
+    updatedByRetailSync: z.boolean().optional(),
+    splitTransactions: z.array(z.unknown()).optional(), // Array of split transaction references
+    originalTransaction: z.unknown().optional(), // Original transaction reference if this is a correction
+    needsReviewByUser: UserSummarySchema.nullable().optional(),
+    ownershipOverriddenAt: z.string().nullable().optional(), // ISO 8601 timestamp
+    __typename: z.string().optional(),
+  })
+  .strict();
 export type Transaction = z.infer<typeof TransactionSchema>;
 
 export const TRANSACTION_FIELDS = `
@@ -138,21 +124,25 @@ export const TRANSACTION_FIELDS = `
 
 // ---------------- Transaction List Response ----------------
 
-export const AllTransactionsSchema = z.object({
-  totalCount: z.number(),
-  totalSelectableCount: z.number(),
-  results: z.array(TransactionSchema),
-  __typename: z.string().optional(),
-}).strict();
+export const AllTransactionsSchema = z
+  .object({
+    totalCount: z.number(),
+    totalSelectableCount: z.number(),
+    results: z.array(TransactionSchema),
+    __typename: z.string().optional(),
+  })
+  .strict();
 export type AllTransactions = z.infer<typeof AllTransactionsSchema>;
 
 // Re-export for backwards compatibility
 export { TransactionRuleSummarySchema, type TransactionRuleSummary } from './rules.types.js';
 
-export const GetTransactionsResponseSchema = z.object({
-  allTransactions: AllTransactionsSchema,
-  transactionRules: z.array(TransactionRuleSummarySchema),
-}).strict();
+export const GetTransactionsResponseSchema = z
+  .object({
+    allTransactions: AllTransactionsSchema,
+    transactionRules: z.array(TransactionRuleSummarySchema),
+  })
+  .strict();
 export type GetTransactionsResponse = z.infer<typeof GetTransactionsResponseSchema>;
 
 // ---------------- Input Types ----------------
@@ -169,7 +159,7 @@ export type TransactionFiltersInput = Partial<{
   tagIds: string[];
   goalIds: string[];
   startDate: string; // YYYY-MM-DD
-  endDate: string;   // YYYY-MM-DD
+  endDate: string; // YYYY-MM-DD
   amount: number;
   amountOperator: string; // "lt" | "lte" | "eq" | "gte" | "gt"
   isPending: boolean; // Note: filter uses isPending, but Transaction type has pending field
@@ -178,7 +168,8 @@ export type TransactionFiltersInput = Partial<{
   isRecurring: boolean;
   isSplitTransaction: boolean;
   transactionVisibility: string; // "non_hidden_transactions_only" | "hidden_transactions_only" | "all_transactions"
-}> & Record<string, unknown>;
+}> &
+  Record<string, unknown>;
 
 /**
  * Options for getTransactions function
@@ -196,14 +187,19 @@ export interface GetTransactionsOptions {
  * Response from getTransaction query.
  * Returns a single transaction by ID along with household user information.
  */
-export const GetTransactionResponseSchema = z.object({
-  getTransaction: TransactionSchema.nullable(),
-  myHousehold: z.object({
-    id: z.string(),
-    users: z.array(UserSummarySchema),
-    __typename: z.string().optional(),
-  }).strict().optional(),
-}).strict();
+export const GetTransactionResponseSchema = z
+  .object({
+    getTransaction: TransactionSchema.nullable(),
+    myHousehold: z
+      .object({
+        id: z.string(),
+        users: z.array(UserSummarySchema),
+        __typename: z.string().optional(),
+      })
+      .strict()
+      .optional(),
+  })
+  .strict();
 export type GetTransactionResponse = z.infer<typeof GetTransactionResponseSchema>;
 
 /**
@@ -243,17 +239,19 @@ export interface UpdateTransactionInput {
   tags?: string[];
 }
 
-
 /**
  * Response schema for updateTransaction mutation.
  * Note: transaction is nullable - on error, it will be null and errors will be populated.
  */
-export const UpdateTransactionResponseSchema = z.object({
-  updateTransaction: z.object({
-    transaction: TransactionSchema.nullable(),
-    errors: MutationErrorSchema.nullable(),
-    __typename: z.string().optional(),
-  }).strict(),
-}).strict();
+export const UpdateTransactionResponseSchema = z
+  .object({
+    updateTransaction: z
+      .object({
+        transaction: TransactionSchema.nullable(),
+        errors: MutationErrorSchema.nullable(),
+        __typename: z.string().optional(),
+      })
+      .strict(),
+  })
+  .strict();
 export type UpdateTransactionResponse = z.infer<typeof UpdateTransactionResponseSchema>;
-
