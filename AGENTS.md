@@ -80,7 +80,9 @@ When building APIs after looking at requests and responses, follow the following
 
 # Publishing
 
-This package is published to npm automatically via CI when a version tag is pushed:
+This package is published to npm automatically via CI when a version tag is pushed.
+
+**Always update `CHANGELOG.md`** before releasing. Add a new section at the top following the [Keep a Changelog](https://keepachangelog.com/) format with Added/Changed/Fixed/Removed subsections as appropriate.
 
 1. **Build and test**: Ensure all tests pass and the build succeeds locally
 
