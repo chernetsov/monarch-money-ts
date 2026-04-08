@@ -21,8 +21,6 @@ jobs:
           node-version: 22
           cache: pnpm
           registry-url: https://registry.npmjs.org
-      - name: Upgrade npm for trusted publishing
-        run: npm i -g npm@^11.5.1
       - name: Install
         run: pnpm install --frozen-lockfile
       - name: Lint
