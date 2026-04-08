@@ -38,4 +38,4 @@ jobs:
             exit 1
           fi
       - name: Publish
-        run: npm publish --access public --provenance
+        run: npx npm@11 publish --access public --provenance
