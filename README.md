@@ -115,7 +115,7 @@ import { type Account, AccountSchema, type Transaction, TransactionSchema } from
 
 This library uses an **AI-assisted agent workflow**. Instead of reverse-engineering APIs manually, real traffic logs are captured from Monarch Money using a [browser extension](./traffic-recorder-extension/README.md) and analyzed with the [traffic analyzer tool](./mmtraf.md). An AI assistant then builds and validates the API schemas and client code from the observed requests and responses.
 
-This ensures the TypeScript types accurately reflect actual API behavior and allows rapid iteration as the API evolves.
+Every API module has a corresponding integration test that runs against the live Monarch GraphQL endpoint, so the Zod schemas are continuously validated against real responses. If Monarch changes their API shape, the strict schemas will fail on parse and surface the drift immediately.
 
 ## Contributing
 
