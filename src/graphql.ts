@@ -8,7 +8,7 @@ export class MonarchGraphQLClient {
 
   private readonly client: GraphQLClient;
 
-  constructor(endpoint: string = "https://api.monarchmoney.com/graphql") {
+  constructor(endpoint: string = "https://api.monarch.com/graphql") {
     this.client = new GraphQLClient(endpoint);
   }
 

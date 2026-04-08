@@ -36,7 +36,7 @@ export class FixedTokenAuthProvider implements AuthProvider {
 /**
  * Perform a login request to Monarch with a hardcoded endpoint.
  */
-const LOGIN_ENDPOINT = 'https://api.monarchmoney.com/auth/login/';
+const LOGIN_ENDPOINT = 'https://api.monarch.com/auth/login/';
 
 export const LoginResponseSchema = z.object({
   token: z.string(),
@@ -86,6 +86,12 @@ const loginRequest = async (params: LoginParams): Promise<LoginResponse> => {
     throw new Error('MFA required or invalid TOTP');
   }
 
+  if (response.status === 429) {
+    const retryAfter = response.headers.get('Retry-After');
+    const retryMs = retryAfter ? parseInt(retryAfter, 10) * 1000 : undefined;
+    throw new LoginThrottledError(retryMs);
+  }
+
   if (response.status !== 200) {
     throw new Error(`Login failed: HTTP ${response.status} ${response.statusText} - ${raw}`);
   }
@@ -111,8 +117,32 @@ const loginRequest = async (params: LoginParams): Promise<LoginResponse> => {
 export type TokenUpdateCallback = (token: string, tokenExpiresAtMs: number | undefined) => void | Promise<void>;
 
 /**
+ * Thrown when the login endpoint returns 429 Too Many Requests.
+ */
+export class LoginThrottledError extends Error {
+  readonly retryAfterMs?: number;
+  readonly cooldownUntilMs: number;
+
+  constructor(retryAfterMs?: number) {
+    const DEFAULT_COOLDOWN_MS = 5 * 60_000;
+    const cooldownMs = retryAfterMs ?? DEFAULT_COOLDOWN_MS;
+    const until = Date.now() + cooldownMs;
+    const minutes = Math.ceil(cooldownMs / 60_000);
+    super(
+      `Login rate-limited by Monarch (429). ` +
+      `Will not retry for ${minutes} minute(s). ` +
+      `If this persists, extract a token from an active browser session or contact Monarch support.`
+    );
+    this.name = 'LoginThrottledError';
+    this.retryAfterMs = retryAfterMs;
+    this.cooldownUntilMs = until;
+  }
+}
+
+/**
  * EmailPasswordAuthProvider logs in via username/password and optional TOTP key.
- * It caches the retrieved token until invalidated.
+ * It caches the retrieved token until invalidated, and enforces a cooldown
+ * after login failures to avoid triggering Monarch's rate limiter.
  */
 export class EmailPasswordAuthProvider implements AuthProvider {
   private readonly email: string;
@@ -123,7 +153,10 @@ export class EmailPasswordAuthProvider implements AuthProvider {
   private token?: string;
   private tokenExpiresAtMs?: number;
   
-  private readonly refreshSkewMs: number = 60_000; // refresh 60s before expiry
+  private readonly refreshSkewMs: number = 60_000;
+
+  private loginCooldownUntilMs: number = 0;
+  private lastLoginError?: Error;
 
   constructor(params: { 
     email: string; 
@@ -148,14 +181,25 @@ export class EmailPasswordAuthProvider implements AuthProvider {
   private isTokenValid(): boolean {
     if (!this.token) return false;
     if (!this.tokenExpiresAtMs) return true;
-    const now = Date.now();
-    const valid = now + this.refreshSkewMs < this.tokenExpiresAtMs;
-    return valid;
-    }
+    return Date.now() + this.refreshSkewMs < this.tokenExpiresAtMs;
+  }
+
+  private isInCooldown(): boolean {
+    return Date.now() < this.loginCooldownUntilMs;
+  }
 
   async getToken(): Promise<string> {
     if (this.isTokenValid()) {
       return this.token as string;
+    }
+
+    if (this.isInCooldown()) {
+      const remainingSec = Math.ceil((this.loginCooldownUntilMs - Date.now()) / 1000);
+      throw new Error(
+        `Login is in cooldown (${remainingSec}s remaining) due to previous failure: ` +
+        `${this.lastLoginError?.message ?? 'unknown'}. ` +
+        `Provide a valid token directly to bypass.`
+      );
     }
 
     let totpCode: string | undefined;
@@ -168,25 +212,34 @@ export class EmailPasswordAuthProvider implements AuthProvider {
       }
     }
 
-    const login = await loginRequest({
-      email: this.email,
-      password: this.password,
-      totp: totpCode,
-    });
-    this.token = login.token;
-    const expiresAt = Date.parse(login.tokenExpiration);
-    if (!Number.isNaN(expiresAt)) {
-      this.tokenExpiresAtMs = expiresAt;
-    } else {
-      this.tokenExpiresAtMs = undefined;
-    }
+    try {
+      const login = await loginRequest({
+        email: this.email,
+        password: this.password,
+        totp: totpCode,
+      });
+
+      this.loginCooldownUntilMs = 0;
+      this.lastLoginError = undefined;
+
+      this.token = login.token;
+      const expiresAt = Date.parse(login.tokenExpiration);
+      this.tokenExpiresAtMs = !Number.isNaN(expiresAt) ? expiresAt : undefined;
     
-    // Notify callback about token update
-    if (this.onTokenUpdate) {
-      await this.onTokenUpdate(this.token, this.tokenExpiresAtMs);
-    }
+      if (this.onTokenUpdate) {
+        await this.onTokenUpdate(this.token, this.tokenExpiresAtMs);
+      }
     
-    return login.token;
+      return login.token;
+    } catch (e) {
+      if (e instanceof LoginThrottledError) {
+        this.loginCooldownUntilMs = e.cooldownUntilMs;
+      } else {
+        this.loginCooldownUntilMs = Date.now() + 30_000;
+      }
+      this.lastLoginError = e instanceof Error ? e : new Error(String(e));
+      throw e;
+    }
   }
 
   async invalidate(): Promise<void> {
