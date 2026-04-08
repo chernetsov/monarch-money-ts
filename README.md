@@ -1,8 +1,8 @@
 # Monarch Money TypeScript API
 
-[![npm version](https://img.shields.io/npm/v/monarch-money-ts.svg)](https://www.npmjs.com/package/monarch-money-ts)
-[![CI](https://github.com/chernetsov/monarch-money-ts/actions/workflows/ci.yml/badge.svg)](https://github.com/chernetsov/monarch-money-ts/actions/workflows/ci.yml)
-[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
+[npm version](https://www.npmjs.com/package/monarch-money-ts)
+[CI](https://github.com/chernetsov/monarch-money-ts/actions/workflows/ci.yml)
+[License: MIT](https://opensource.org/licenses/MIT)
 
 An unofficial TypeScript client for the [Monarch Money](https://www.monarchmoney.com/) API with comprehensive Zod-validated types.
 
@@ -54,20 +54,54 @@ const auth = new EmailPasswordAuthProvider({
 
 Both implement the `AuthProvider` interface and can be passed to any API function.
 
-## Available APIs
+## API Coverage
 
-All API functions follow the same pattern: `apiFunction(auth, client, options?)`.
+All API functions follow the same pattern: `apiFunction(auth, client, options?)`. Every response is validated at runtime with [Zod](https://zod.dev/) schemas.
 
-| Domain           | Functions                                                | Description                                 |
-| ---------------- | -------------------------------------------------------- | ------------------------------------------- |
-| **Accounts**     | `getAccounts`                                            | List accounts with optional filters         |
-| **Transactions** | `getTransactions`, `getTransaction`, `updateTransaction` | Query, fetch, and update transactions       |
-| **Categories**   | `getCategories`                                          | List transaction categories                 |
-| **Budgets**      | `getBudgetReport`                                        | Retrieve budget data and spending summaries |
-| **Portfolio**    | `getPortfolio`                                           | Investment portfolio holdings               |
-| **Rules**        | `getRules`                                               | Transaction categorization rules            |
+This library covers a subset of Monarch Money's GraphQL API. The table below shows what's implemented and what's not yet available. Coverage is compared against the known API surface from the [Python monarchmoney library](https://github.com/hammem/monarchmoney).
 
-Every response is validated at runtime with [Zod](https://zod.dev/) schemas, so you get both TypeScript types and runtime guarantees.
+| Domain           | Operation                           | Status | Function                                         |
+| ---------------- | ----------------------------------- | ------ | ------------------------------------------------ |
+| **Accounts**     | List accounts                       | Done   | `getAccounts`                                    |
+|                  | Get account type options            | --     |                                                  |
+|                  | Get recent account balances         | --     |                                                  |
+|                  | Get account snapshots by type       | --     |                                                  |
+|                  | Get aggregate snapshots (net worth) | --     |                                                  |
+|                  | Create manual account               | --     |                                                  |
+|                  | Update account                      | --     |                                                  |
+|                  | Delete account                      | --     |                                                  |
+|                  | Refresh accounts (sync)             | --     |                                                  |
+|                  | Get account history                 | --     |                                                  |
+| **Transactions** | List transactions                   | Done   | `getTransactions`                                |
+|                  | Get transaction details             | Done   | `getTransaction`                                 |
+|                  | Update transaction                  | Done   | `updateTransaction`                              |
+|                  | Create transaction                  | --     |                                                  |
+|                  | Delete transaction                  | --     |                                                  |
+|                  | Get transaction splits              | --     |                                                  |
+|                  | Update transaction splits           | --     |                                                  |
+|                  | Get transactions summary            | --     |                                                  |
+| **Categories**   | List categories & groups            | Done   | `getBudgetCategories`, `getBudgetCategoryGroups` |
+|                  | Get category detail                 | Done   | `getBudgetCategory`                              |
+|                  | Create category                     | --     |                                                  |
+|                  | Delete category                     | --     |                                                  |
+| **Tags**         | List tags                           | --     |                                                  |
+|                  | Create tag                          | --     |                                                  |
+|                  | Set transaction tags                | --     |                                                  |
+| **Budgets**      | Get budget report                   | Done   | `getBudgetReport`                                |
+|                  | Get budget status                   | Done   | `getBudgetStatus`                                |
+|                  | Get budget settings                 | Done   | `getBudgetSettings`                              |
+|                  | Set budget amount                   | --     |                                                  |
+| **Portfolio**    | Get portfolio holdings              | Done   | `getPortfolio`                                   |
+| **Rules**        | List transaction rules              | Done   | `getTransactionRules`                            |
+|                  | Preview transaction rule            | Done   | `previewTransactionRule`                         |
+|                  | Create / update / delete rules      | --     |                                                  |
+| **Cash Flow**    | Get cash flow breakdown             | --     |                                                  |
+|                  | Get cash flow summary               | --     |                                                  |
+| **Recurring**    | Get recurring transactions          | --     |                                                  |
+| **Institutions** | List institutions                   | --     |                                                  |
+| **Subscription** | Get subscription details            | --     |                                                  |
+
+Contributions to expand coverage are welcome! See [CONTRIBUTING.md](./CONTRIBUTING.md) for the traffic-driven workflow used to add new APIs.
 
 ## Type System
 
