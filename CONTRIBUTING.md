@@ -59,19 +59,29 @@ traffic-recorder-extension/  # Chrome extension for capturing API traffic
 
 ## Adding a New API
 
-This project uses a traffic-driven workflow:
+This project uses an **agent-driven, traffic-first workflow**. The only manual step is browsing Monarch Money to generate traffic — everything else (analysis, schema generation, API implementation, tests) is done by an AI coding agent.
 
-1. **Capture traffic** — Use the [traffic recorder extension](./traffic-recorder-extension/README.md) to capture GraphQL requests from Monarch Money in your browser.
+### Your part (manual)
 
-2. **Analyze traffic** — Use the `mmtraf` tool (`pnpm mmtraf`) to inspect captured requests and responses. See [mmtraf.md](./mmtraf.md) for usage.
+1. **Capture traffic** — Install the [traffic recorder extension](./traffic-recorder-extension/README.md), open Monarch Money in your browser, and navigate through the pages relevant to the API you want to add. The extension records all GraphQL requests and responses to a log file.
 
-3. **Define types** — Create `src/<domain>.types.ts` with Zod schemas using `.strict()`, a `*_FIELDS` constant for GraphQL field selection, and exported TypeScript types via `z.infer<>`.
+> We plan to automate this step too (headless browser walking pages to collect traffic), but for now it requires a human clicking around.
 
-4. **Implement API** — Create `src/<domain>.api.ts`. Functions accept `auth: AuthProvider` and `client: MonarchGraphQLClient`, use `gql` tagged templates, and validate responses with the Zod schema.
+### The agent's part (automated)
 
-5. **Export** — Add re-exports to `src/index.ts`.
+Once traffic is captured, the agent takes over:
 
-6. **Test** — Add integration tests in `src/<domain>.int.test.ts`.
+2. **Analyze traffic** — The agent uses the `mmtraf` tool (`pnpm mmtraf`) to browse, search, and inspect the captured requests and responses. See [mmtraf.md](./mmtraf.md) for details on the tool.
+
+3. **Define types** — The agent creates `src/<domain>.types.ts` with Zod schemas derived from the real response shapes, `*_FIELDS` constants for GraphQL field selection, and exported TypeScript types via `z.infer<>`.
+
+4. **Implement API** — The agent creates `src/<domain>.api.ts` with functions that accept `auth: AuthProvider` and `client: MonarchGraphQLClient`, use `gql` tagged templates, and validate responses with the Zod schemas.
+
+5. **Export** — The agent adds re-exports to `src/index.ts`.
+
+6. **Test** — The agent writes integration tests in `src/<domain>.int.test.ts` that validate against the live API.
+
+The coding conventions in `AGENTS.md` guide the agent through all of this. If you're contributing manually, those same conventions apply — but the intended workflow is to let the agent do the heavy lifting from the traffic logs.
 
 ## Code Conventions
 
