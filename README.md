@@ -1,8 +1,8 @@
 # Monarch Money TypeScript API
 
-[npm version](https://www.npmjs.com/package/monarch-money-ts)
-[CI](https://github.com/chernetsov/monarch-money-ts/actions/workflows/ci.yml)
-[License: MIT](https://opensource.org/licenses/MIT)
+[![npm version](https://img.shields.io/npm/v/monarch-money-ts.svg)](https://www.npmjs.com/package/monarch-money-ts)
+[![CI](https://github.com/chernetsov/monarch-money-ts/actions/workflows/ci.yml/badge.svg)](https://github.com/chernetsov/monarch-money-ts/actions/workflows/ci.yml)
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 
 An unofficial TypeScript client for the [Monarch Money](https://www.monarchmoney.com/) API with comprehensive Zod-validated types.
 
