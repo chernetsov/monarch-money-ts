@@ -1,8 +1,8 @@
-# Monarch Money TypeScript API
+# Monarch Money TypeScript API & CLI
 
-[![npm version](https://img.shields.io/npm/v/monarch-money-ts.svg)](https://www.npmjs.com/package/monarch-money-ts)
-[![CI](https://github.com/chernetsov/monarch-money-ts/actions/workflows/ci.yml/badge.svg)](https://github.com/chernetsov/monarch-money-ts/actions/workflows/ci.yml)
-[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
+[npm version](https://www.npmjs.com/package/monarch-money-ts)
+[CI](https://github.com/chernetsov/monarch-money-ts/actions/workflows/ci.yml)
+[License: MIT](https://opensource.org/licenses/MIT)
 
 An unofficial TypeScript client for the [Monarch Money](https://www.monarchmoney.com/) API with comprehensive Zod-validated types.
 
@@ -15,6 +15,19 @@ npm install monarch-money-ts
 # or
 pnpm add monarch-money-ts
 ```
+
+## CLI
+
+The package also installs a `monarch-money` executable for scriptable access to the same APIs:
+
+```bash
+npx monarch-money-ts --help
+monarch-money accounts list
+monarch-money transactions list '{"limit":10}'
+monarch-money schemas get input.transactions.list
+```
+
+The CLI uses JSON input and JSON output, supports stateful token caching with `monarch-money auth login`, and exposes named JSON Schemas for command inputs and outputs. See [CLI.md](./CLI.md) for the full CLI guide.
 
 ## Quick Start
 
@@ -105,10 +118,17 @@ Contributions to expand coverage are welcome! See [CONTRIBUTING.md](./CONTRIBUTI
 
 ## Type System
 
-The library exports both Zod schemas and inferred TypeScript types for all API responses:
+The library exports Zod schemas and inferred TypeScript types for API responses and reusable API inputs:
 
 ```typescript
-import { type Account, AccountSchema, type Transaction, TransactionSchema } from 'monarch-money-ts';
+import {
+  type Account,
+  AccountSchema,
+  AccountFiltersInputSchema,
+  type Transaction,
+  TransactionSchema,
+  GetTransactionsOptionsSchema,
+} from 'monarch-money-ts';
 ```
 
 ## How This Library Is Built

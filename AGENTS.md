@@ -78,6 +78,18 @@ When building APIs after looking at requests and responses, follow the following
   - **Scope**: Exercise real GraphQL endpoints; prefer simple, robust expectations to handle live data variance.
   - **Naming**: Group by feature (e.g., `describe('integration: accounts', ...)`).
 
+# Building the CLI
+
+This package publishes the `monarch-money` CLI from `src/cli`.
+
+- Keep CLI command inputs as a single JSON payload.
+- Keep command outputs as JSON success/error envelopes.
+- Reuse exported library Zod input/output schemas in the CLI schema registry whenever possible.
+- Define reusable API input schemas in the domain `*.types.ts` file, not in `src/cli`.
+- Use CLI-only wrapper schemas only when adapting multiple library function arguments into one JSON payload.
+- Keep command `--help` compact by listing named schemas; expose full schemas through `monarch-money schemas list` and `monarch-money schemas get <name>`.
+- Auth state should cache only session token metadata. Never cache passwords or TOTP secrets.
+
 # Publishing
 
 This package is published to npm automatically via CI when a version tag is pushed.
