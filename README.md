@@ -1,4 +1,4 @@
-# Monarch Money TypeScript API
+# Monarch Money TypeScript API & CLI
 
 [npm version](https://www.npmjs.com/package/monarch-money-ts)
 [CI](https://github.com/chernetsov/monarch-money-ts/actions/workflows/ci.yml)
