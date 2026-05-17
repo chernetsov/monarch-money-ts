@@ -234,11 +234,14 @@ export type GetPortfolioResponse = z.infer<typeof GetPortfolioResponseSchema>;
  * - includeHiddenHoldings: include hidden holdings
  * - topMoversLimit: limit for top movers (used by web UI)
  */
-export type PortfolioInput = Partial<{
-  accountIds: string[];
-  includeHiddenHoldings: boolean;
-  startDate: string;
-  endDate: string;
-  topMoversLimit: number;
-}> &
-  Record<string, unknown>;
+export const PortfolioInputSchema = z
+  .object({
+    accountIds: z.array(z.string()).optional(),
+    includeHiddenHoldings: z.boolean().optional(),
+    startDate: z.string().optional(),
+    endDate: z.string().optional(),
+    topMoversLimit: z.number().int().positive().optional(),
+  })
+  .catchall(z.unknown());
+
+export type PortfolioInput = z.infer<typeof PortfolioInputSchema>;

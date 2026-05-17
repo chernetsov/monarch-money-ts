@@ -520,9 +520,13 @@ export type BudgetSettings = z.infer<typeof BudgetSettingsSchema>;
 /**
  * Input parameters for fetching budget report data
  */
-export interface BudgetReportInput {
-  /** Start month in YYYY-MM-DD format (e.g., "2025-12-01") */
-  startDate: string;
-  /** End month in YYYY-MM-DD format (e.g., "2026-03-01") */
-  endDate: string;
-}
+export const BudgetReportInputSchema = z
+  .object({
+    /** Start month in YYYY-MM-DD format (e.g., "2025-12-01") */
+    startDate: z.string().min(1),
+    /** End month in YYYY-MM-DD format (e.g., "2026-03-01") */
+    endDate: z.string().min(1),
+  })
+  .strict();
+
+export type BudgetReportInput = z.infer<typeof BudgetReportInputSchema>;

@@ -151,35 +151,42 @@ export type GetTransactionsResponse = z.infer<typeof GetTransactionsResponseSche
  * Filters for transactions query (aligns with TransactionFilterInput in GraphQL).
  * All fields are optional to allow flexible filtering.
  */
-export type TransactionFiltersInput = Partial<{
-  search: string;
-  accountIds: string[];
-  categoryIds: string[];
-  merchantIds: string[];
-  tagIds: string[];
-  goalIds: string[];
-  startDate: string; // YYYY-MM-DD
-  endDate: string; // YYYY-MM-DD
-  amount: number;
-  amountOperator: string; // "lt" | "lte" | "eq" | "gte" | "gt"
-  isPending: boolean; // Note: filter uses isPending, but Transaction type has pending field
-  hideFromReports: boolean;
-  needsReview: boolean;
-  isRecurring: boolean;
-  isSplitTransaction: boolean;
-  transactionVisibility: string; // "non_hidden_transactions_only" | "hidden_transactions_only" | "all_transactions"
-}> &
-  Record<string, unknown>;
+export const TransactionFiltersInputSchema = z
+  .object({
+    search: z.string().optional(),
+    accountIds: z.array(z.string()).optional(),
+    categoryIds: z.array(z.string()).optional(),
+    merchantIds: z.array(z.string()).optional(),
+    tagIds: z.array(z.string()).optional(),
+    goalIds: z.array(z.string()).optional(),
+    startDate: z.string().optional(), // YYYY-MM-DD
+    endDate: z.string().optional(), // YYYY-MM-DD
+    amount: z.number().optional(),
+    amountOperator: z.string().optional(), // "lt" | "lte" | "eq" | "gte" | "gt"
+    isPending: z.boolean().optional(), // Note: filter uses isPending, but Transaction type has pending field
+    hideFromReports: z.boolean().optional(),
+    needsReview: z.boolean().optional(),
+    isRecurring: z.boolean().optional(),
+    isSplitTransaction: z.boolean().optional(),
+    transactionVisibility: z.string().optional(), // "non_hidden_transactions_only" | "hidden_transactions_only" | "all_transactions"
+  })
+  .catchall(z.unknown());
+
+export type TransactionFiltersInput = z.infer<typeof TransactionFiltersInputSchema>;
 
 /**
  * Options for getTransactions function
  */
-export interface GetTransactionsOptions {
-  offset?: number;
-  limit?: number;
-  orderBy?: string; // "date" | "amount" | etc.
-  filters?: TransactionFiltersInput;
-}
+export const GetTransactionsOptionsSchema = z
+  .object({
+    offset: z.number().int().min(0).optional(),
+    limit: z.number().int().positive().optional(),
+    orderBy: z.string().optional(), // "date" | "amount" | etc.
+    filters: TransactionFiltersInputSchema.optional(),
+  })
+  .strict();
+
+export type GetTransactionsOptions = z.infer<typeof GetTransactionsOptionsSchema>;
 
 // ---------------- Get Single Transaction Response ----------------
 
@@ -205,12 +212,16 @@ export type GetTransactionResponse = z.infer<typeof GetTransactionResponseSchema
 /**
  * Input options for fetching a single transaction.
  */
-export interface GetTransactionOptions {
-  /** Transaction ID to fetch */
-  id: string;
-  /** Whether to redirect posted transactions (optional) */
-  redirectPosted?: boolean;
-}
+export const GetTransactionOptionsSchema = z
+  .object({
+    /** Transaction ID to fetch */
+    id: z.string().min(1),
+    /** Whether to redirect posted transactions (optional) */
+    redirectPosted: z.boolean().optional(),
+  })
+  .strict();
+
+export type GetTransactionOptions = z.infer<typeof GetTransactionOptionsSchema>;
 
 // ---------------- Update Transaction Types ----------------
 
@@ -218,26 +229,30 @@ export interface GetTransactionOptions {
  * Generic input for updating a transaction.
  * All fields except id are optional - only provide the fields you want to update.
  */
-export interface UpdateTransactionInput {
-  /** Transaction ID to update */
-  id: string;
-  /** Category ID to assign */
-  category?: string;
-  /** Whether this is a recommended category (used with category updates) */
-  isRecommendedCategory?: boolean;
-  /** Mark transaction as reviewed (true) or needing review (false) */
-  reviewed?: boolean;
-  /** Mark transaction as needing review */
-  needsReview?: boolean;
-  /** Transaction notes */
-  notes?: string;
-  /** Merchant ID */
-  merchant?: string;
-  /** Hide from reports */
-  hideFromReports?: boolean;
-  /** Tag IDs to assign */
-  tags?: string[];
-}
+export const UpdateTransactionInputSchema = z
+  .object({
+    /** Transaction ID to update */
+    id: z.string().min(1),
+    /** Category ID to assign */
+    category: z.string().optional(),
+    /** Whether this is a recommended category (used with category updates) */
+    isRecommendedCategory: z.boolean().optional(),
+    /** Mark transaction as reviewed (true) or needing review (false) */
+    reviewed: z.boolean().optional(),
+    /** Mark transaction as needing review */
+    needsReview: z.boolean().optional(),
+    /** Transaction notes */
+    notes: z.string().optional(),
+    /** Merchant ID */
+    merchant: z.string().optional(),
+    /** Hide from reports */
+    hideFromReports: z.boolean().optional(),
+    /** Tag IDs to assign */
+    tags: z.array(z.string()).optional(),
+  })
+  .strict();
+
+export type UpdateTransactionInput = z.infer<typeof UpdateTransactionInputSchema>;
 
 /**
  * Response schema for updateTransaction mutation.

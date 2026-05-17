@@ -4,6 +4,21 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/), and this project adheres to [Semantic Versioning](https://semver.org/).
 
+## [Unreleased]
+
+### Added
+
+- `monarch-money` CLI executable with JSON input/output commands for the existing API surface
+- Stateful CLI authentication with `auth login`, `auth status`, `auth logout`, and configurable `MONARCH_AUTH_FILE`
+- CLI JSON Schema registry via `schemas list` and `schemas get <name>`
+- Exported Zod input schemas for accounts, transactions, budgets, portfolio, and transaction rule preview APIs
+- CLI documentation in `CLI.md`
+
+### Changed
+
+- Moved `commander` to runtime dependencies for the published CLI
+- Documented CLI and reusable input schema conventions
+
 ## [0.1.0] - 2026-04-08
 
 ### Added

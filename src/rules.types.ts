@@ -361,35 +361,57 @@ export type GetTransactionRulesResponse = z.infer<typeof GetTransactionRulesResp
  * Input for previewing which transactions a rule would match.
  * Mirrors TransactionRulePreviewInput from the GraphQL schema.
  */
-export type TransactionRulePreviewInput = {
-  merchantCriteriaUseOriginalStatement?: boolean;
-  merchantCriteria?: Array<{ operator: string; value: string }>;
-  merchantNameCriteria?: Array<{ operator: string; value: string }>;
-  originalStatementCriteria?: Array<{ operator: string; value: string }>;
-  amountCriteria?: {
-    operator: string;
-    isExpense: boolean;
-    value?: number | null;
-    valueRange?: { lower: number; upper: number } | null;
-  } | null;
-  categoryIds?: string[];
-  accountIds?: string[];
-  criteriaOwnerIsJoint?: boolean;
-  criteriaOwnerUserIds?: string[];
-  // Actions
-  setCategoryAction?: string;
-  setMerchantAction?: string;
-  addTagsAction?: string[];
-  linkGoalAction?: string;
-  needsReviewByUserAction?: string;
-  unassignNeedsReviewByUserAction?: boolean;
-  sendNotificationAction?: boolean;
-  setHideFromReportsAction?: boolean;
-  reviewStatusAction?: string;
-  actionSetOwnerIsJoint?: boolean;
-  actionSetOwner?: string;
-  applyToExistingTransactions?: boolean;
-};
+const RuleCriterionInputSchema = z
+  .object({
+    operator: z.string(),
+    value: z.string(),
+  })
+  .strict();
+
+export const TransactionRulePreviewInputSchema = z
+  .object({
+    merchantCriteriaUseOriginalStatement: z.boolean().optional(),
+    merchantCriteria: z.array(RuleCriterionInputSchema).optional(),
+    merchantNameCriteria: z.array(RuleCriterionInputSchema).optional(),
+    originalStatementCriteria: z.array(RuleCriterionInputSchema).optional(),
+    amountCriteria: z
+      .object({
+        operator: z.string(),
+        isExpense: z.boolean(),
+        value: z.number().nullable().optional(),
+        valueRange: z
+          .object({
+            lower: z.number(),
+            upper: z.number(),
+          })
+          .strict()
+          .nullable()
+          .optional(),
+      })
+      .strict()
+      .nullable()
+      .optional(),
+    categoryIds: z.array(z.string()).optional(),
+    accountIds: z.array(z.string()).optional(),
+    criteriaOwnerIsJoint: z.boolean().optional(),
+    criteriaOwnerUserIds: z.array(z.string()).optional(),
+    // Actions
+    setCategoryAction: z.string().optional(),
+    setMerchantAction: z.string().optional(),
+    addTagsAction: z.array(z.string()).optional(),
+    linkGoalAction: z.string().optional(),
+    needsReviewByUserAction: z.string().optional(),
+    unassignNeedsReviewByUserAction: z.boolean().optional(),
+    sendNotificationAction: z.boolean().optional(),
+    setHideFromReportsAction: z.boolean().optional(),
+    reviewStatusAction: z.string().optional(),
+    actionSetOwnerIsJoint: z.boolean().optional(),
+    actionSetOwner: z.string().optional(),
+    applyToExistingTransactions: z.boolean().optional(),
+  })
+  .strict();
+
+export type TransactionRulePreviewInput = z.infer<typeof TransactionRulePreviewInputSchema>;
 
 // ---------------- Preview Transaction Rule Response ----------------
 
@@ -486,7 +508,11 @@ export type PreviewTransactionRuleResponse = z.infer<typeof PreviewTransactionRu
 /**
  * Options for previewTransactionRule function.
  */
-export interface PreviewTransactionRuleOptions {
-  offset?: number;
-  limit?: number;
-}
+export const PreviewTransactionRuleOptionsSchema = z
+  .object({
+    offset: z.number().int().min(0).optional(),
+    limit: z.number().int().positive().optional(),
+  })
+  .strict();
+
+export type PreviewTransactionRuleOptions = z.infer<typeof PreviewTransactionRuleOptionsSchema>;

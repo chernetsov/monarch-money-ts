@@ -108,10 +108,13 @@ export const GetAccountsResponseSchema = z
 export type GetAccountsResponse = z.infer<typeof GetAccountsResponseSchema>;
 
 // Filters input (aligns with AccountFilters seen in traffic)
-export type AccountFiltersInput = Partial<{
-  accountType: string;
-  includeManual: boolean;
-  includeHidden: boolean;
-  ignoreHiddenFromNetWorth: boolean;
-}> &
-  Record<string, unknown>;
+export const AccountFiltersInputSchema = z
+  .object({
+    accountType: z.string().optional(),
+    includeManual: z.boolean().optional(),
+    includeHidden: z.boolean().optional(),
+    ignoreHiddenFromNetWorth: z.boolean().optional(),
+  })
+  .catchall(z.unknown());
+
+export type AccountFiltersInput = z.infer<typeof AccountFiltersInputSchema>;

@@ -46,6 +46,7 @@ pnpm test:integration
 
 ```
 src/
+  cli/             # Published monarch-money CLI
   *.types.ts      # Zod schemas, TypeScript types, and GraphQL field constants
   *.api.ts        # API functions (one per domain)
   *.int.test.ts   # Integration tests
@@ -87,9 +88,19 @@ The coding conventions in `AGENTS.md` guide the agent through all of this. If yo
 
 - Use `.strict()` on Zod object schemas
 - Express nullability with `.nullable()` at the property level
+- Define reusable API input schemas as exported Zod schemas next to their inferred TypeScript types
 - Define `*_FIELDS` constants alongside schemas for GraphQL field selection
 - Validate all GraphQL responses with Zod before returning
 - Summary types (lightweight versions used in other responses) go in `common.types.ts` with a `*Summary` suffix
+
+## CLI Conventions
+
+- Keep the published CLI in `src/cli/`
+- Commands should accept at most one JSON input payload
+- Commands should return JSON success/error envelopes
+- Reuse library input/output Zod schemas in the CLI schema registry whenever possible
+- Use CLI-only wrapper schemas only to adapt multiple library arguments into one JSON input payload
+- Keep command help compact; expose full schemas through `monarch-money schemas list` and `monarch-money schemas get <name>`
 
 ## Submitting Changes
 
