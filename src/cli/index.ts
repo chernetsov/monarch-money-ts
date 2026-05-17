@@ -368,9 +368,10 @@ function createContext(): {
 function runCommand<TInput>(
   schema: z.ZodType<TInput>,
   handler: CommandHandler<TInput>,
-): (input?: string) => Promise<void> {
-  return async (input?: string) => {
+): (...args: unknown[]) => Promise<void> {
+  return async (...args: unknown[]) => {
     try {
+      const input = typeof args[0] === 'string' ? args[0] : undefined;
       const rawInput = await parseInput(input);
       const parsed = schema.safeParse(rawInput);
       if (!parsed.success) {
