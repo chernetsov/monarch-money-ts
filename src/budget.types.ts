@@ -530,3 +530,62 @@ export const BudgetReportInputSchema = z
   .strict();
 
 export type BudgetReportInput = z.infer<typeof BudgetReportInputSchema>;
+
+/**
+ * Input for setting the planned budget amount of a category or category group.
+ * Exactly one of `categoryId` or `categoryGroupId` must be provided.
+ */
+export const SetBudgetAmountInputSchema = z
+  .object({
+    /** Planned amount. Zero clears the budget for the month. */
+    amount: z.number(),
+    /** Category ID to budget (mutually exclusive with categoryGroupId) */
+    categoryId: z.string().min(1).optional(),
+    /** Category group ID to budget (mutually exclusive with categoryId) */
+    categoryGroupId: z.string().min(1).optional(),
+    /** First day of the month in YYYY-MM-DD format. Defaults to the current month. */
+    startDate: z
+      .string()
+      .regex(/^\d{4}-\d{2}-\d{2}$/)
+      .optional(),
+    /** Budget timeframe. Monarch only accepts "month" today. */
+    timeframe: z.literal('month').optional(),
+    /** Apply the amount to all following months */
+    applyToFuture: z.boolean().optional(),
+  })
+  .strict()
+  .refine((input) => (input.categoryId === undefined) !== (input.categoryGroupId === undefined), {
+    message: 'Provide exactly one of categoryId or categoryGroupId',
+    path: ['categoryId'],
+  });
+
+export type SetBudgetAmountInput = z.infer<typeof SetBudgetAmountInputSchema>;
+
+export const BudgetItemSchema = z
+  .object({
+    id: z.string(),
+    budgetAmount: z.number().nullable(),
+    __typename: z.string().optional(),
+  })
+  .strict();
+
+export type BudgetItem = z.infer<typeof BudgetItemSchema>;
+
+export const BUDGET_ITEM_FIELDS = `
+  id
+  budgetAmount
+  __typename
+`;
+
+export const SetBudgetAmountResponseSchema = z
+  .object({
+    updateOrCreateBudgetItem: z
+      .object({
+        budgetItem: BudgetItemSchema.nullable(),
+        __typename: z.string().optional(),
+      })
+      .strict(),
+  })
+  .strict();
+
+export type SetBudgetAmountResponse = z.infer<typeof SetBudgetAmountResponseSchema>;

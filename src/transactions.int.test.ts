@@ -1,10 +1,25 @@
 import { describe, it, expect } from 'vitest';
 import { getIntegrationContext } from './test-utils.js';
-import { getTransaction, getTransactions, updateTransaction } from './transactions.api.js';
+import {
+  getTransaction,
+  getTransactions,
+  getTransactionSplits,
+  updateTransaction,
+} from './transactions.api.js';
 import { getBudgetCategories } from './categories.api.js';
-import { MonarchGraphQLError } from './common.types.js';
+import { MonarchGraphQLError, MonarchMutationError } from './common.types.js';
 
 describe('integration: transactions', () => {
+  it('gets transaction splits', async () => {
+    const { auth, client } = getIntegrationContext();
+    const txnResult = await getTransactions(auth, client, { limit: 1 });
+    expect(txnResult.transactions.length).toBeGreaterThan(0);
+
+    const splits = await getTransactionSplits(auth, client, { id: txnResult.transactions[0].id });
+    expect(splits?.id).toBe(txnResult.transactions[0].id);
+    expect(Array.isArray(splits?.splitTransactions)).toBe(true);
+  });
+
   it('gets transactions (no filters)', async () => {
     const { auth, client } = getIntegrationContext();
     const result = await getTransactions(auth, client);
@@ -308,5 +323,93 @@ describe('integration: transactions', () => {
       id: txn.id,
       notes: originalNotes || '',
     });
+  });
+
+  it('filters by account and category', async () => {
+    const { auth, client } = getIntegrationContext();
+    const sample = await getTransactions(auth, client, { limit: 1 });
+    expect(sample.transactions.length).toBeGreaterThan(0);
+    const { account, category } = sample.transactions[0];
+
+    const byAccount = await getTransactions(auth, client, {
+      limit: 25,
+      filters: { accountIds: [account.id] },
+    });
+    expect(byAccount.transactions.length).toBeGreaterThan(0);
+    expect(byAccount.totalCount).toBeLessThan(sample.totalCount + 1);
+    for (const txn of byAccount.transactions) {
+      expect(txn.account.id).toBe(account.id);
+    }
+
+    if (category) {
+      const byCategory = await getTransactions(auth, client, {
+        limit: 25,
+        filters: { categoryIds: [category.id] },
+      });
+      expect(byCategory.transactions.length).toBeGreaterThan(0);
+      for (const txn of byCategory.transactions) {
+        expect(txn.category?.id).toBe(category.id);
+      }
+    }
+  });
+
+  it('filters by absolute amount bounds', async () => {
+    const { auth, client } = getIntegrationContext();
+    const atLeast = await getTransactions(auth, client, {
+      limit: 25,
+      filters: { amount: 100, amountOperator: 'gte' },
+    });
+    expect(atLeast.transactions.length).toBeGreaterThan(0);
+    for (const txn of atLeast.transactions) {
+      expect(Math.abs(txn.amount)).toBeGreaterThanOrEqual(100);
+    }
+
+    const atMost = await getTransactions(auth, client, {
+      limit: 25,
+      filters: { amount: 5, amountOperator: 'lte' },
+    });
+    for (const txn of atMost.transactions) {
+      expect(Math.abs(txn.amount)).toBeLessThanOrEqual(5);
+    }
+  });
+
+  it('filters by split status', async () => {
+    const { auth, client } = getIntegrationContext();
+    const all = await getTransactions(auth, client, { limit: 1 });
+    const split = await getTransactions(auth, client, {
+      limit: 25,
+      filters: { isSplitTransaction: true },
+    });
+    expect(split.totalCount).toBeLessThan(all.totalCount);
+    for (const txn of split.transactions) {
+      expect(txn.isSplitTransaction).toBe(true);
+    }
+  });
+
+  it('surfaces field errors when an update is rejected', async () => {
+    const { auth, client } = getIntegrationContext();
+    const { transactions } = await getTransactions(auth, client, { limit: 1 });
+    expect(transactions.length).toBeGreaterThan(0);
+    const { categories } = await getBudgetCategories(auth, client);
+    const disabled = categories.find((c) => c.isDisabled);
+    if (!disabled) {
+      console.warn('No disabled category; skipping mutation error test');
+      return;
+    }
+
+    const txn = transactions[0];
+    let error: unknown;
+    try {
+      await updateTransaction(auth, client, { id: txn.id, category: disabled.id });
+      if (txn.category) {
+        await updateTransaction(auth, client, { id: txn.id, category: txn.category.id });
+      }
+    } catch (e) {
+      error = e;
+    }
+    expect(error).toBeInstanceOf(MonarchMutationError);
+    const mutationError = error as MonarchMutationError;
+    expect(mutationError.fieldErrors.some((fe) => fe.field === 'category')).toBe(true);
+    expect(mutationError.message).toContain('category');
   });
 });

@@ -1,5 +1,11 @@
 import { z } from 'zod';
-import { TagSchema, TAG_FIELDS, UserSummarySchema, USER_SUMMARY_FIELDS } from './common.types.js';
+import {
+  MutationErrorSchema,
+  TagSchema,
+  TAG_FIELDS,
+  UserSummarySchema,
+  USER_SUMMARY_FIELDS,
+} from './common.types.js';
 
 // ---------------- Rule Summary (embedded in transaction responses) ----------------
 
@@ -412,6 +418,39 @@ export const TransactionRulePreviewInputSchema = z
   .strict();
 
 export type TransactionRulePreviewInput = z.infer<typeof TransactionRulePreviewInputSchema>;
+
+// ---------------- Create Transaction Rule ----------------
+
+/** Mirrors CreateTransactionRuleInput, which lacks the preview-only unassign action. */
+export const CreateTransactionRuleInputSchema = TransactionRulePreviewInputSchema.omit({
+  unassignNeedsReviewByUserAction: true,
+});
+export type CreateTransactionRuleInput = z.infer<typeof CreateTransactionRuleInputSchema>;
+
+export const CreateTransactionRuleResponseSchema = z
+  .object({
+    createTransactionRuleV2: z
+      .object({
+        errors: MutationErrorSchema.nullable(),
+        __typename: z.string().optional(),
+      })
+      .strict(),
+  })
+  .strict();
+export type CreateTransactionRuleResponse = z.infer<typeof CreateTransactionRuleResponseSchema>;
+
+export const DeleteTransactionRuleResponseSchema = z
+  .object({
+    deleteTransactionRule: z
+      .object({
+        deleted: z.boolean().nullable(),
+        errors: MutationErrorSchema.nullable(),
+        __typename: z.string().optional(),
+      })
+      .strict(),
+  })
+  .strict();
+export type DeleteTransactionRuleResponse = z.infer<typeof DeleteTransactionRuleResponseSchema>;
 
 // ---------------- Preview Transaction Rule Response ----------------
 

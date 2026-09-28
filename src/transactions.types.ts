@@ -161,8 +161,10 @@ export const TransactionFiltersInputSchema = z
     goalIds: z.array(z.string()).optional(),
     startDate: z.string().optional(), // YYYY-MM-DD
     endDate: z.string().optional(), // YYYY-MM-DD
+    /** Compared against the absolute amount, so debits and credits match alike. */
     amount: z.number().optional(),
-    amountOperator: z.string().optional(), // "lt" | "lte" | "eq" | "gte" | "gt"
+    /** Defaults to "eq". Monarch only supports inclusive bounds, so "gt"/"lt" behave like "gte"/"lte". */
+    amountOperator: z.enum(['lt', 'lte', 'eq', 'gte', 'gt']).optional(),
     isPending: z.boolean().optional(), // Note: filter uses isPending, but Transaction type has pending field
     hideFromReports: z.boolean().optional(),
     needsReview: z.boolean().optional(),
@@ -270,3 +272,135 @@ export const UpdateTransactionResponseSchema = z
   })
   .strict();
 export type UpdateTransactionResponse = z.infer<typeof UpdateTransactionResponseSchema>;
+
+// ---------------- Transaction Splits ----------------
+
+/** Minimal `{ id, name }` reference used in split responses. */
+const SplitEntityRefSchema = z
+  .object({
+    id: z.string(),
+    name: z.string(),
+    __typename: z.string().optional(),
+  })
+  .strict();
+
+const SPLIT_ENTITY_REF_FIELDS = `
+  id
+  name
+  __typename
+`;
+
+export const TransactionSplitSchema = z
+  .object({
+    id: z.string(),
+    merchant: SplitEntityRefSchema.nullable(),
+    category: SplitEntityRefSchema.nullable(),
+    amount: z.number(),
+    notes: z.string().nullable(),
+    __typename: z.string().optional(),
+  })
+  .strict();
+export type TransactionSplit = z.infer<typeof TransactionSplitSchema>;
+
+export const TRANSACTION_SPLIT_FIELDS = `
+  id
+  merchant {
+    ${SPLIT_ENTITY_REF_FIELDS}
+  }
+  category {
+    ${SPLIT_ENTITY_REF_FIELDS}
+  }
+  amount
+  notes
+  __typename
+`;
+
+/** Parent transaction with its split children. */
+export const TransactionSplitsSchema = z
+  .object({
+    id: z.string(),
+    amount: z.number(),
+    category: SplitEntityRefSchema.nullable(),
+    merchant: SplitEntityRefSchema.nullable(),
+    splitTransactions: z.array(TransactionSplitSchema),
+    __typename: z.string().optional(),
+  })
+  .strict();
+export type TransactionSplits = z.infer<typeof TransactionSplitsSchema>;
+
+export const TRANSACTION_SPLITS_FIELDS = `
+  id
+  amount
+  category {
+    ${SPLIT_ENTITY_REF_FIELDS}
+  }
+  merchant {
+    ${SPLIT_ENTITY_REF_FIELDS}
+  }
+  splitTransactions {
+    ${TRANSACTION_SPLIT_FIELDS}
+  }
+  __typename
+`;
+
+export const GetTransactionSplitsResponseSchema = z
+  .object({
+    getTransaction: TransactionSplitsSchema.nullable(),
+  })
+  .strict();
+export type GetTransactionSplitsResponse = z.infer<typeof GetTransactionSplitsResponseSchema>;
+
+export const GetTransactionSplitsInputSchema = z
+  .object({
+    /** Parent transaction ID */
+    id: z.string().min(1),
+  })
+  .strict();
+export type GetTransactionSplitsInput = z.infer<typeof GetTransactionSplitsInputSchema>;
+
+/**
+ * One split in an update request. Known fields are documented; additional
+ * `TransactionSplitInput` fields are passed through unchanged.
+ */
+export const TransactionSplitInputSchema = z
+  .object({
+    /** Split amount; all split amounts must sum to the parent transaction amount */
+    amount: z.number(),
+    merchantName: z.string().optional(),
+    categoryId: z.string().optional(),
+  })
+  .catchall(z.unknown());
+export type TransactionSplitInput = z.infer<typeof TransactionSplitInputSchema>;
+
+export const UpdateTransactionSplitsInputSchema = z
+  .object({
+    /** Parent transaction ID */
+    transactionId: z.string().min(1),
+    /** Replaces all existing splits. An empty array removes all splits. */
+    splitData: z.array(TransactionSplitInputSchema),
+  })
+  .strict();
+export type UpdateTransactionSplitsInput = z.infer<typeof UpdateTransactionSplitsInputSchema>;
+
+export const UpdatedTransactionSplitsSchema = z
+  .object({
+    id: z.string(),
+    hasSplitTransactions: z.boolean(),
+    splitTransactions: z.array(TransactionSplitSchema),
+    __typename: z.string().optional(),
+  })
+  .strict();
+export type UpdatedTransactionSplits = z.infer<typeof UpdatedTransactionSplitsSchema>;
+
+export const UpdateTransactionSplitsResponseSchema = z
+  .object({
+    updateTransactionSplit: z
+      .object({
+        errors: MutationErrorSchema.nullable(),
+        transaction: UpdatedTransactionSplitsSchema.nullable(),
+        __typename: z.string().optional(),
+      })
+      .strict(),
+  })
+  .strict();
+export type UpdateTransactionSplitsResponse = z.infer<typeof UpdateTransactionSplitsResponseSchema>;

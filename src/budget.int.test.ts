@@ -1,6 +1,11 @@
 import { describe, test, expect } from 'vitest';
 import { getIntegrationContext } from './test-utils.js';
-import { getBudgetReport, getBudgetStatus, getBudgetSettings } from './budget.api.js';
+import {
+  getBudgetReport,
+  getBudgetStatus,
+  getBudgetSettings,
+  setBudgetAmount,
+} from './budget.api.js';
 
 describe('integration: budget', () => {
   test('getBudgetStatus returns budget status information', async () => {
@@ -131,5 +136,41 @@ describe('integration: budget', () => {
 
     expect(longPeriodReport).toBeDefined();
     expect(longPeriodReport.budgetData).toBeDefined();
+  });
+
+  test('setBudgetAmount round-trips a planned amount', async () => {
+    const { auth, client } = getIntegrationContext();
+    const month = '2035-01-01';
+    const plannedFor = async (categoryId: string) => {
+      const report = await getBudgetReport(auth, client, { startDate: month, endDate: month });
+      const entry = report.budgetData.monthlyAmountsByCategory.find(
+        (e) => e.category.id === categoryId,
+      );
+      return entry?.monthlyAmounts.find((m) => m.month === month)?.plannedCashFlowAmount ?? 0;
+    };
+
+    const report = await getBudgetReport(auth, client, { startDate: month, endDate: month });
+    const category = report.categoryGroups
+      .filter((g) => g.type === 'expense')
+      .flatMap((g) => g.categories)[0];
+    expect(category).toBeDefined();
+
+    const original = await plannedFor(category.id);
+    try {
+      const item = await setBudgetAmount(auth, client, {
+        categoryId: category.id,
+        startDate: month,
+        amount: original + 7,
+      });
+      expect(item.budgetAmount).toBe(original + 7);
+      expect(await plannedFor(category.id)).toBe(original + 7);
+    } finally {
+      await setBudgetAmount(auth, client, {
+        categoryId: category.id,
+        startDate: month,
+        amount: original,
+      });
+    }
+    expect(await plannedFor(category.id)).toBe(original);
   });
 });

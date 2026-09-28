@@ -4,6 +4,41 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/), and this project adheres to [Semantic Versioning](https://semver.org/).
 
+## [Unreleased]
+
+### Added
+
+- **mmcap** — interactive Playwright capture of Monarch GraphQL traffic to `traffic/logs/mmcap-YYYY-MM-DD.jsonl` ([mmcap.md](./mmcap.md))
+- **mmtraf** JSONL support — `list`, `summary`, and index commands work on `.jsonl` logs (with `idx` column in summary)
+- Recurring transactions APIs: `getRecurringTransactionStreams` and `getAggregatedRecurringItems`
+- Recurring CLI commands: `monarch-money recurring streams` and `monarch-money recurring aggregated` (alias `recurring items`)
+- Budget API `setBudgetAmount` and CLI `monarch-money budget set`
+- Tags APIs `getTransactionTags`, `createTransactionTag`, `setTransactionTags` and CLI `tags list`, `tags create`, `transactions set-tags`
+- Transaction split APIs `getTransactionSplits`, `updateTransactionSplits` and CLI `transactions splits get`, `transactions splits update`
+- Cash flow APIs `getCashflow`, `getCashflowSummary` and CLI `cashflow summary`, `cashflow by-category`, `cashflow breakdown`
+- Account refresh APIs `requestAccountsRefresh`, `getAccountsRefreshStatus`, `isAccountsRefreshComplete`, `refreshAccounts` and CLI `accounts refresh` (optional `wait`) and `accounts refresh-status`
+- Category APIs `createCategory`, `restoreCategory` and CLI `categories create`, `categories restore` (re-enables a disabled system category)
+- Rule API `createTransactionRule` and CLI `rules create`
+- Delete APIs `deleteCategory`, `deleteTransactionTag`, `deleteTransactionRule` and CLI `categories delete`, `tags delete`, `rules delete`
+- CLI schemas for the new commands (`input.budget.set`, `input.category.create`, `input.rule.create`, `input.tags.list`, `input.cashflow`, `input.accounts.refresh`, and matching outputs)
+- Mocked unit tests for the new APIs (`src/api.test.ts`)
+- Integration tests for transaction filters, mutation field errors, cash flow filters, and create/delete round trips for tags, categories, rules, and budget amounts (each cleans up after itself)
+
+### Fixed
+
+- `getTransactions` filters `accountIds`, `categoryIds`, `merchantIds`, `tagIds`, `goalIds`, `isSplitTransaction`, and `amount`/`amountOperator` are translated to the server's `TransactionFilterInput` fields; previously they failed with a masked server error
+- Mutation errors with a null `message` (e.g. updating a transaction to a disabled category) now surface the field errors instead of a schema validation failure; `MutationErrorSchema.message` is nullable and `MonarchMutationError.fromPayload` builds the message
+- Cash flow `filters` use the same server field translation as `getTransactions`
+- `amountOperator` is validated as `lt`, `lte`, `eq`, `gte`, or `gt`
+
+### Changed
+
+- Traffic capture workflow documented around `mmcap` instead of the Chrome DevTools extension
+
+### Removed
+
+- Traffic recorder Chrome extension (`traffic-recorder-extension/`)
+
 ## [0.2.0] - 2026-05-17
 
 ### Added

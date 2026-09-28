@@ -24,6 +24,8 @@ The package also installs a `monarch-money` executable for scriptable access to 
 npx monarch-money-ts --help
 monarch-money accounts list
 monarch-money transactions list '{"limit":10}'
+monarch-money cashflow summary '{"startDate":"2026-09-01","endDate":"2026-09-30"}'
+monarch-money budget set '{"categoryId":"...","amount":250,"startDate":"2026-10-01"}'
 monarch-money schemas get input.transactions.list
 ```
 
@@ -73,46 +75,47 @@ All API functions follow the same pattern: `apiFunction(auth, client, options?)`
 
 This library covers a subset of Monarch Money's GraphQL API. The table below shows what's implemented and what's not yet available. Coverage is compared against the known API surface from the [Python monarchmoney library](https://github.com/hammem/monarchmoney).
 
-| Domain           | Operation                           | Status | Function                                         |
-| ---------------- | ----------------------------------- | ------ | ------------------------------------------------ |
-| **Accounts**     | List accounts                       | Done   | `getAccounts`                                    |
-|                  | Get account type options            | --     |                                                  |
-|                  | Get recent account balances         | --     |                                                  |
-|                  | Get account snapshots by type       | --     |                                                  |
-|                  | Get aggregate snapshots (net worth) | --     |                                                  |
-|                  | Create manual account               | --     |                                                  |
-|                  | Update account                      | --     |                                                  |
-|                  | Delete account                      | --     |                                                  |
-|                  | Refresh accounts (sync)             | --     |                                                  |
-|                  | Get account history                 | --     |                                                  |
-| **Transactions** | List transactions                   | Done   | `getTransactions`                                |
-|                  | Get transaction details             | Done   | `getTransaction`                                 |
-|                  | Update transaction                  | Done   | `updateTransaction`                              |
-|                  | Create transaction                  | --     |                                                  |
-|                  | Delete transaction                  | --     |                                                  |
-|                  | Get transaction splits              | --     |                                                  |
-|                  | Update transaction splits           | --     |                                                  |
-|                  | Get transactions summary            | --     |                                                  |
-| **Categories**   | List categories & groups            | Done   | `getBudgetCategories`, `getBudgetCategoryGroups` |
-|                  | Get category detail                 | Done   | `getBudgetCategory`                              |
-|                  | Create category                     | --     |                                                  |
-|                  | Delete category                     | --     |                                                  |
-| **Tags**         | List tags                           | --     |                                                  |
-|                  | Create tag                          | --     |                                                  |
-|                  | Set transaction tags                | --     |                                                  |
-| **Budgets**      | Get budget report                   | Done   | `getBudgetReport`                                |
-|                  | Get budget status                   | Done   | `getBudgetStatus`                                |
-|                  | Get budget settings                 | Done   | `getBudgetSettings`                              |
-|                  | Set budget amount                   | --     |                                                  |
-| **Portfolio**    | Get portfolio holdings              | Done   | `getPortfolio`                                   |
-| **Rules**        | List transaction rules              | Done   | `getTransactionRules`                            |
-|                  | Preview transaction rule            | Done   | `previewTransactionRule`                         |
-|                  | Create / update / delete rules      | --     |                                                  |
-| **Cash Flow**    | Get cash flow breakdown             | --     |                                                  |
-|                  | Get cash flow summary               | --     |                                                  |
-| **Recurring**    | Get recurring transactions          | --     |                                                  |
-| **Institutions** | List institutions                   | --     |                                                  |
-| **Subscription** | Get subscription details            | --     |                                                  |
+| Domain           | Operation                           | Status | Function                                                                |
+| ---------------- | ----------------------------------- | ------ | ----------------------------------------------------------------------- |
+| **Accounts**     | List accounts                       | Done   | `getAccounts`                                                           |
+|                  | Get account type options            | --     |                                                                         |
+|                  | Get recent account balances         | --     |                                                                         |
+|                  | Get account snapshots by type       | --     |                                                                         |
+|                  | Get aggregate snapshots (net worth) | --     |                                                                         |
+|                  | Create manual account               | --     |                                                                         |
+|                  | Update account                      | --     |                                                                         |
+|                  | Delete account                      | --     |                                                                         |
+|                  | Refresh accounts (sync)             | Done   | `requestAccountsRefresh`, `refreshAccounts`, `getAccountsRefreshStatus` |
+|                  | Get account history                 | --     |                                                                         |
+| **Transactions** | List transactions                   | Done   | `getTransactions`                                                       |
+|                  | Get transaction details             | Done   | `getTransaction`                                                        |
+|                  | Update transaction                  | Done   | `updateTransaction`                                                     |
+|                  | Create transaction                  | --     |                                                                         |
+|                  | Delete transaction                  | --     |                                                                         |
+|                  | Get transaction splits              | Done   | `getTransactionSplits`                                                  |
+|                  | Update transaction splits           | Done   | `updateTransactionSplits`                                               |
+|                  | Get transactions summary            | --     |                                                                         |
+| **Categories**   | List categories & groups            | Done   | `getBudgetCategories`, `getBudgetCategoryGroups`                        |
+|                  | Get category detail                 | Done   | `getBudgetCategory`                                                     |
+|                  | Create category                     | --     |                                                                         |
+|                  | Delete category                     | --     |                                                                         |
+| **Tags**         | List tags                           | Done   | `getTransactionTags`                                                    |
+|                  | Create tag                          | Done   | `createTransactionTag`                                                  |
+|                  | Set transaction tags                | Done   | `setTransactionTags`                                                    |
+| **Budgets**      | Get budget report                   | Done   | `getBudgetReport`                                                       |
+|                  | Get budget status                   | Done   | `getBudgetStatus`                                                       |
+|                  | Get budget settings                 | Done   | `getBudgetSettings`                                                     |
+|                  | Set budget amount                   | Done   | `setBudgetAmount`                                                       |
+| **Portfolio**    | Get portfolio holdings              | Done   | `getPortfolio`                                                          |
+| **Rules**        | List transaction rules              | Done   | `getTransactionRules`                                                   |
+|                  | Preview transaction rule            | Done   | `previewTransactionRule`                                                |
+|                  | Create / update / delete rules      | --     |                                                                         |
+| **Cash Flow**    | Get cash flow breakdown             | Done   | `getCashflow`                                                           |
+|                  | Get cash flow summary               | Done   | `getCashflowSummary`                                                    |
+| **Recurring**    | List recurring streams              | Done   | `getRecurringTransactionStreams`                                        |
+|                  | Get aggregated recurring items      | Done   | `getAggregatedRecurringItems`                                           |
+| **Institutions** | List institutions                   | --     |                                                                         |
+| **Subscription** | Get subscription details            | --     |                                                                         |
 
 Contributions to expand coverage are welcome! See [CONTRIBUTING.md](./CONTRIBUTING.md) for the traffic-driven workflow used to add new APIs.
 
@@ -128,12 +131,14 @@ import {
   type Transaction,
   TransactionSchema,
   GetTransactionsOptionsSchema,
+  type RecurringCalendarItem,
+  GetAggregatedRecurringItemsInputSchema,
 } from 'monarch-money-ts';
 ```
 
 ## How This Library Is Built
 
-This library uses an **AI-assisted agent workflow**. Instead of reverse-engineering APIs manually, real traffic logs are captured from Monarch Money using a [browser extension](./traffic-recorder-extension/README.md) and analyzed with the [traffic analyzer tool](./mmtraf.md). An AI assistant then builds and validates the API schemas and client code from the observed requests and responses.
+This library uses an **AI-assisted agent workflow**. Real traffic is captured interactively with [mmcap](./mmcap.md) (headed browser + JSONL logs) and analyzed with [mmtraf](./mmtraf.md). An AI assistant then builds and validates API schemas and client code from the observed requests and responses.
 
 Every API module has a corresponding integration test that runs against the live Monarch GraphQL endpoint, so the Zod schemas are continuously validated against real responses. If Monarch changes their API shape, the strict schemas will fail on parse and surface the drift immediately.
 

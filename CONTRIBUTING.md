@@ -54,25 +54,22 @@ src/
   auth.ts         # Authentication providers
   graphql.ts      # GraphQL client wrapper
   index.ts        # Public barrel export
-tools/            # Dev-only CLI utilities
-traffic-recorder-extension/  # Chrome extension for capturing API traffic
+tools/            # Dev-only CLI utilities (mmcap, mmtraf)
 ```
 
 ## Adding a New API
 
-This project uses an **agent-driven, traffic-first workflow**. The only manual step is browsing Monarch Money to generate traffic — everything else (analysis, schema generation, API implementation, tests) is done by an AI coding agent.
+This project uses an **agent-driven, traffic-first workflow**. Capture is interactive (you log in by hand and browse); analysis, schema generation, API implementation, and tests are done by an AI coding agent.
 
-### Your part (manual)
+### Capture (interactive)
 
-1. **Capture traffic** — Install the [traffic recorder extension](./traffic-recorder-extension/README.md), open Monarch Money in your browser, and navigate through the pages relevant to the API you want to add. The extension records all GraphQL requests and responses to a log file.
+1. **Record traffic** — Run `pnpm mmcap` ([mmcap.md](./mmcap.md)). A headed browser opens; log in manually, then browse Monarch. GraphQL calls append live to `traffic/logs/mmcap-YYYY-MM-DD.jsonl`.
 
-> We plan to automate this step too (headless browser walking pages to collect traffic), but for now it requires a human clicking around.
+The default mode is recorder-only. Use your browser normally, or use an existing browser-control surface to drive the page while `mmcap` records.
 
 ### The agent's part (automated)
 
-Once traffic is captured, the agent takes over:
-
-2. **Analyze traffic** — The agent uses the `mmtraf` tool (`pnpm mmtraf`) to browse, search, and inspect the captured requests and responses. See [mmtraf.md](./mmtraf.md) for details on the tool.
+2. **Analyze traffic** — The agent uses `pnpm mmtraf` to list, summarize, and inspect JSONL logs. See [mmtraf.md](./mmtraf.md).
 
 3. **Define types** — The agent creates `src/<domain>.types.ts` with Zod schemas derived from the real response shapes, `*_FIELDS` constants for GraphQL field selection, and exported TypeScript types via `z.infer<>`.
 

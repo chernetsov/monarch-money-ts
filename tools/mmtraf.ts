@@ -8,19 +8,25 @@
 import { Command } from 'commander';
 import { createReadStream, promises as fs } from 'fs';
 import path from 'path';
+import readline from 'readline';
 import { pipeline } from 'stream/promises';
 import StreamJson from 'stream-json';
 import StreamArrayMod from 'stream-json/streamers/StreamArray.js';
 import { InputData, jsonInputForTargetLanguage, quicktype } from 'quicktype-core';
+import {
+  TRAFFIC_DIR,
+  isJsonlFile,
+  operationNameFromEntry,
+  redactHeaders,
+  resolveTrafficPath,
+  type TrafficEntry,
+} from './traffic-shared.js';
 
 // CJS interop: these modules export defaults with helper properties
 const { parser } = StreamJson as unknown as { parser: (opts?: any) => NodeJS.ReadWriteStream };
 const { streamArray } = StreamArrayMod as unknown as {
   streamArray: (opts?: any) => NodeJS.ReadWriteStream;
 };
-
-// Utilities
-const TRAFFIC_DIR = path.resolve(process.cwd(), 'traffic');
 
 function formatBytes(bytes: number): string {
   const units = ['B', 'KB', 'MB', 'GB', 'TB'];
@@ -31,19 +37,6 @@ function formatBytes(bytes: number): string {
     i++;
   }
   return `${n.toFixed(n < 10 && i > 0 ? 1 : 0)} ${units[i]}`;
-}
-
-function maskHeaders(
-  headers: Array<{ name: string; value: string }>,
-): Array<{ name: string; value: string }> {
-  const SENSITIVE = new Set(['authorization', 'x-api-key', 'x-auth-token', 'cookie']);
-  return (headers || []).map((h) => {
-    const nameLower = (h?.name || '').toLowerCase();
-    if (SENSITIVE.has(nameLower)) {
-      return { name: h.name, value: '***REDACTED***' };
-    }
-    return h;
-  });
 }
 
 function omittedString(body: unknown, label?: string, see?: string[]): string | null {
@@ -59,21 +52,62 @@ async function listTrafficFiles(): Promise<
   Array<{ file: string; path: string; size: number; count: number }>
 > {
   const results: Array<{ file: string; path: string; size: number; count: number }> = [];
-  let entries: string[] = [];
+
+  async function scanDir(dir: string, prefix: string): Promise<void> {
+    let entries: string[];
+    try {
+      entries = await fs.readdir(dir);
+    } catch {
+      return;
+    }
+    for (const name of entries) {
+      const full = path.join(dir, name);
+      const rel = prefix ? `${prefix}${name}` : name;
+      const stat = await fs.stat(full);
+      if (stat.isDirectory()) {
+        if (name === 'logs' && dir === TRAFFIC_DIR) {
+          await scanDir(full, 'logs/');
+        }
+        continue;
+      }
+      if (!name.endsWith('.json') && !name.endsWith('.jsonl')) continue;
+      if (name.endsWith('.json.gz')) continue;
+      const count = await countTrafficEntries(full);
+      results.push({ file: rel, path: full, size: stat.size, count });
+    }
+  }
+
   try {
-    entries = await fs.readdir(TRAFFIC_DIR);
-  } catch (err) {
+    await fs.access(TRAFFIC_DIR);
+  } catch {
     throw new Error(`Traffic directory not found: ${TRAFFIC_DIR}`);
   }
 
-  const jsonFiles = entries.filter((e) => e.endsWith('.json'));
-  for (const file of jsonFiles) {
-    const full = path.join(TRAFFIC_DIR, file);
-    const stat = await fs.stat(full);
-    const count = await countJsonArrayItems(full);
-    results.push({ file, path: full, size: stat.size, count });
-  }
+  await scanDir(TRAFFIC_DIR, '');
+  results.sort((a, b) => a.file.localeCompare(b.file));
   return results;
+}
+
+async function countTrafficEntries(fullPath: string): Promise<number> {
+  if (isJsonlFile(fullPath)) {
+    return countJsonlLines(fullPath);
+  }
+  return countJsonArrayItems(fullPath);
+}
+
+async function countJsonlLines(fullPath: string): Promise<number> {
+  const input = createReadStream(fullPath, { encoding: 'utf8' });
+  const rl = readline.createInterface({ input, crlfDelay: Infinity });
+  let count = 0;
+  try {
+    for await (const line of rl) {
+      if (line.trim()) count++;
+    }
+  } finally {
+    rl.close();
+    input.destroy();
+  }
+  return count;
 }
 
 async function countJsonArrayItems(fullPath: string): Promise<number> {
@@ -99,47 +133,18 @@ async function countJsonArrayItems(fullPath: string): Promise<number> {
 
 async function showRecord(fileBase: string, index: number): Promise<void> {
   const full = resolveTrafficPath(fileBase);
-  const input = createReadStream(full);
-
-  let found: any = null;
-
-  try {
-    // Build stream chain manually to allow early break and cleanup
-    const p = parser();
-    const s = streamArray();
-
-    let src: NodeJS.ReadableStream = input;
-    src = src.pipe(p).pipe(s);
-
-    for await (const chunk of src as AsyncIterable<any>) {
-      if (chunk.key === index) {
-        found = chunk.value;
-        break;
-      }
-    }
-
-    // Cleanup stream chain explicitly
-    safeDestroy(s);
-    safeDestroy(p);
-    safeDestroy(input);
-  } catch (err) {
-    // Ensure streams are closed on error
-    safeDestroy(input);
-    throw err;
-  }
-
-  if (!found) throw new Error(`Index ${index} not found in ${full}`);
+  const found = await readRecord(full, index);
 
   const safe = {
     url: found.url,
     method: found.method,
-    requestHeaders: maskHeaders(found.requestHeaders || []),
+    requestHeaders: redactHeaders(found.requestHeaders || []),
     requestBody: omittedString(found.requestBody, 'request body', [
       'body:req-at',
       'graphql:req-at',
     ]),
     status: found.status,
-    responseHeaders: maskHeaders(found.responseHeaders || []),
+    responseHeaders: redactHeaders(found.responseHeaders || []),
     responseBody: omittedString(found.responseBody, 'response body', ['body:res-at']),
     time: found.time,
     timestamp: found.timestamp,
@@ -169,7 +174,7 @@ program
 program
   .command('show')
   .description('Show a specific request-response by index in a given filename under traffic/')
-  .argument('<file>', 'Filename under traffic/ (e.g. monarch-traffic-... .json)')
+  .argument('<file>', 'Path under traffic/ (.json or .jsonl)')
   .argument('<index>', 'Zero-based index of entry')
   .action(async (file: string, idx: string) => {
     const index = Number(idx);
@@ -223,18 +228,6 @@ function headerValue(
     if ((h?.name || '').toLowerCase() === f) return h.value;
   }
   return undefined;
-}
-
-// -------- small helpers for reuse --------
-function resolveTrafficPath(file: string): string {
-  if (path.isAbsolute(file))
-    throw new Error('Provide a bare filename under traffic/ (no absolute paths)');
-  if (file.includes(path.sep))
-    throw new Error('Provide a bare filename under traffic/ (no relative paths)');
-  if (!file.endsWith('.json')) throw new Error('Filename must end with .json');
-  if (file.endsWith('.json.gz'))
-    throw new Error('Gzipped files are not supported. Use a .json file.');
-  return path.join(TRAFFIC_DIR, file);
 }
 
 function parseIndex(idx: string): number {
@@ -296,7 +289,7 @@ function extractGraphQLQueryFromRequest(body: unknown, contentType: string): str
 program
   .command('schema:req-at')
   .description('Infer TypeScript types for request body at a specific index')
-  .argument('<file>', 'Filename under traffic/ (.json)')
+  .argument('<file>', 'Path under traffic/ (.json or .jsonl, e.g. logs/mmcap-2026-05-21.jsonl)')
   .argument('<index>', 'Zero-based index of entry')
   .action(async (file: string, idx: string) => {
     await withRecord(file, idx, async (rec) => {
@@ -310,7 +303,7 @@ program
 program
   .command('schema:res-at')
   .description('Infer TypeScript types for response body at a specific index')
-  .argument('<file>', 'Filename under traffic/ (.json)')
+  .argument('<file>', 'Path under traffic/ (.json or .jsonl, e.g. logs/mmcap-2026-05-21.jsonl)')
   .argument('<index>', 'Zero-based index of entry')
   .action(async (file: string, idx: string) => {
     await withRecord(file, idx, async (rec) => {
@@ -326,7 +319,7 @@ program
   .description(
     'Output parsed request body at a specific index (JSON for jq). GraphQL query is omitted; use graphql:req-at to view it',
   )
-  .argument('<file>', 'Filename under traffic/ (.json)')
+  .argument('<file>', 'Path under traffic/ (.json or .jsonl, e.g. logs/mmcap-2026-05-21.jsonl)')
   .argument('<index>', 'Zero-based index of entry')
   .action(async (file: string, idx: string) => {
     await withRecord(file, idx, (rec) => {
@@ -354,7 +347,7 @@ program
 program
   .command('body:res-at')
   .description('Output parsed response body at a specific index (JSON for jq)')
-  .argument('<file>', 'Filename under traffic/ (.json)')
+  .argument('<file>', 'Path under traffic/ (.json or .jsonl, e.g. logs/mmcap-2026-05-21.jsonl)')
   .argument('<index>', 'Zero-based index of entry')
   .action(async (file: string, idx: string) => {
     await withRecord(file, idx, (rec) => {
@@ -367,7 +360,7 @@ program
 program
   .command('graphql:req-at')
   .description('Output GraphQL query string from request body at a specific index')
-  .argument('<file>', 'Filename under traffic/ (.json)')
+  .argument('<file>', 'Path under traffic/ (.json or .jsonl, e.g. logs/mmcap-2026-05-21.jsonl)')
   .argument('<index>', 'Zero-based index of entry')
   .action(async (file: string, idx: string) => {
     await withRecord(file, idx, (rec) => {
@@ -398,38 +391,23 @@ function byteSizeOf(body: unknown): number {
 program
   .command('summary')
   .description('Show a one-line-per-request table summary for a traffic file under traffic/')
-  .argument('<file>', 'Filename under traffic/ (.json)')
+  .argument('<file>', 'Path under traffic/ (.json or .jsonl, e.g. logs/mmcap-2026-05-21.jsonl)')
   .action(async (file: string) => {
     const full = resolveTrafficPath(file);
-    const input = createReadStream(full);
-    const p = parser();
-    const s = streamArray();
-    let src: NodeJS.ReadableStream = input;
-    src = src.pipe(p).pipe(s);
-
     const rows: Array<Record<string, unknown>> = [];
-    try {
-      for await (const chunk of src as AsyncIterable<any>) {
-        const rec = chunk.value;
-        const reqCtype = contentTypeFromHeaders(rec?.requestHeaders || []);
-        const parsedReq = parseBodyUsingContentType(rec?.requestBody, reqCtype) as any;
-        const opName: string | undefined =
-          typeof parsedReq?.operationName === 'string' ? parsedReq.operationName : undefined;
-        const reqSize = byteSizeOf(rec?.requestBody);
-        const resSize = byteSizeOf(rec?.responseBody);
-        const totalSize = reqSize + resSize;
-
-        rows.push({
-          gqlOp: opName || '',
-          sizeReq: formatBytes(reqSize),
-          sizeRes: formatBytes(resSize),
-          sizeTotal: formatBytes(totalSize),
-        });
-      }
-    } finally {
-      safeDestroy(s);
-      safeDestroy(p);
-      safeDestroy(input);
+    let idx = 0;
+    for await (const rec of iterateTrafficRecords(full)) {
+      const opName = operationNameFromEntry(rec);
+      const reqSize = byteSizeOf(rec?.requestBody);
+      const resSize = byteSizeOf(rec?.responseBody);
+      rows.push({
+        idx,
+        gqlOp: opName || '',
+        sizeReq: formatBytes(reqSize),
+        sizeRes: formatBytes(resSize),
+        sizeTotal: formatBytes(reqSize + resSize),
+      });
+      idx++;
     }
 
     if (rows.length === 0) {
@@ -439,20 +417,44 @@ program
     console.table(rows);
   });
 
-async function readRecord(full: string, index: number): Promise<any> {
+async function* iterateTrafficRecords(full: string): AsyncGenerator<TrafficEntry> {
+  if (isJsonlFile(full)) {
+    const input = createReadStream(full, { encoding: 'utf8' });
+    const rl = readline.createInterface({ input, crlfDelay: Infinity });
+    try {
+      for await (const line of rl) {
+        const trimmed = line.trim();
+        if (!trimmed) continue;
+        yield JSON.parse(trimmed) as TrafficEntry;
+      }
+    } finally {
+      rl.close();
+      input.destroy();
+    }
+    return;
+  }
+
   const input = createReadStream(full);
   const p = parser();
   const s = streamArray();
   let src: NodeJS.ReadableStream = input;
   src = src.pipe(p).pipe(s);
   try {
-    for await (const chunk of src as AsyncIterable<any>) {
-      if (chunk.key === index) return chunk.value;
+    for await (const chunk of src as AsyncIterable<{ value: TrafficEntry }>) {
+      yield chunk.value;
     }
   } finally {
     safeDestroy(s);
     safeDestroy(p);
     safeDestroy(input);
+  }
+}
+
+async function readRecord(full: string, index: number): Promise<TrafficEntry> {
+  let i = 0;
+  for await (const rec of iterateTrafficRecords(full)) {
+    if (i === index) return rec;
+    i++;
   }
   throw new Error(`Index ${index} not found in ${full}`);
 }

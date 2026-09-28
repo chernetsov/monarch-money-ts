@@ -1,4 +1,5 @@
 import { z } from 'zod';
+import { MutationErrorSchema } from './common.types.js';
 
 // ---------------- Category Group ----------------
 
@@ -149,6 +150,71 @@ export const GetBudgetCategoryResponseSchema = z
   })
   .strict();
 export type GetBudgetCategoryResponse = z.infer<typeof GetBudgetCategoryResponseSchema>;
+
+export const CreateCategoryInputSchema = z
+  .object({
+    groupId: z.string().min(1),
+    name: z.string().min(1),
+    /** Emoji or unicode icon; defaults to ❓ like the web app. */
+    icon: z.string().min(1).optional(),
+    rolloverEnabled: z.boolean().optional(),
+    rolloverType: z.string().optional(),
+    /** First day of the rollover start month, YYYY-MM-DD; defaults to the current month. */
+    rolloverStartMonth: z
+      .string()
+      .regex(/^\d{4}-\d{2}-01$/)
+      .optional(),
+  })
+  .strict();
+export type CreateCategoryInput = z.infer<typeof CreateCategoryInputSchema>;
+
+export const CreateCategoryResponseSchema = z
+  .object({
+    createCategory: z
+      .object({
+        errors: MutationErrorSchema.nullable(),
+        category: BudgetCategoryDetailSchema.nullable(),
+        __typename: z.string().optional(),
+      })
+      .strict(),
+  })
+  .strict();
+export type CreateCategoryResponse = z.infer<typeof CreateCategoryResponseSchema>;
+
+export const RestoreCategoryResponseSchema = z
+  .object({
+    restoreCategory: z
+      .object({
+        errors: MutationErrorSchema.nullable(),
+        category: BudgetCategoryDetailSchema.nullable(),
+        __typename: z.string().optional(),
+      })
+      .strict(),
+  })
+  .strict();
+export type RestoreCategoryResponse = z.infer<typeof RestoreCategoryResponseSchema>;
+
+export const DeleteCategoryInputSchema = z
+  .object({
+    categoryId: z.string().min(1),
+    /** Category that receives the deleted category's transactions and rules. */
+    moveToCategoryId: z.string().min(1).optional(),
+  })
+  .strict();
+export type DeleteCategoryInput = z.infer<typeof DeleteCategoryInputSchema>;
+
+export const DeleteCategoryResponseSchema = z
+  .object({
+    deleteCategory: z
+      .object({
+        errors: MutationErrorSchema.nullable(),
+        deleted: z.boolean().nullable(),
+        __typename: z.string().optional(),
+      })
+      .strict(),
+  })
+  .strict();
+export type DeleteCategoryResponse = z.infer<typeof DeleteCategoryResponseSchema>;
 
 export const GetBudgetCategoryGroupsResponseSchema = z
   .object({
