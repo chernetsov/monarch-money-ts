@@ -1,6 +1,6 @@
 import { describe, it, expect } from 'vitest';
 import { getIntegrationContext } from './test-utils.js';
-import { getAccounts } from './accounts.api.js';
+import { getAccounts, getAccountsRefreshStatus } from './accounts.api.js';
 
 describe('integration: accounts', () => {
   it('gets accounts (no filters)', async () => {
@@ -33,5 +33,13 @@ describe('integration: accounts', () => {
       ignoreHiddenFromNetWorth: true,
     });
     expect(Array.isArray(accounts)).toBe(true);
+  });
+
+  it('gets account refresh status', async () => {
+    const { auth, client } = getIntegrationContext();
+    const status = await getAccountsRefreshStatus(auth, client);
+    expect(typeof status.complete).toBe('boolean');
+    expect(Array.isArray(status.accounts)).toBe(true);
+    expect(status.pendingAccountIds.length <= status.accounts.length).toBe(true);
   });
 });

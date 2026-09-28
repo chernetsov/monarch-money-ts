@@ -84,6 +84,20 @@ export class MonarchMutationError extends Error {
     this.code = code;
     this.fieldErrors = fieldErrors;
   }
+
+  /** Builds an error from a payload; Monarch often sends `message: null` with only field errors. */
+  static fromPayload(errors: MutationError): MonarchMutationError {
+    const fieldErrors = errors.fieldErrors.map((fe) => ({
+      field: fe.field,
+      messages: fe.messages,
+    }));
+    const detail = fieldErrors.map((fe) => `${fe.field}: ${fe.messages.join(', ')}`).join('; ');
+    return new MonarchMutationError(
+      errors.message ?? (detail || 'Mutation failed'),
+      errors.code,
+      fieldErrors,
+    );
+  }
 }
 
 /**
@@ -99,7 +113,7 @@ export const MutationErrorSchema = z
         __typename: z.string().optional(),
       }),
     ),
-    message: z.string(),
+    message: z.string().nullable(),
     code: z.string().nullable(),
     __typename: z.string().optional(),
   })

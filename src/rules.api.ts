@@ -1,7 +1,11 @@
 import { gql } from 'graphql-request';
 import type { AuthProvider } from './auth.js';
 import { MonarchGraphQLClient } from './graphql.js';
+import { MonarchMutationError } from './common.types.js';
 import {
+  CreateTransactionRuleResponseSchema,
+  type CreateTransactionRuleInput,
+  type CreateTransactionRuleResponse,
   TRANSACTION_RULE_FIELDS,
   GetTransactionRulesResponseSchema,
   type TransactionRule,
@@ -73,4 +77,59 @@ export async function previewTransactionRule(
     variables,
   );
   return response.transactionRulePreview;
+}
+
+/**
+ * Creates a transaction rule and returns it.
+ * The create mutation returns only errors, so the new rule is found by diffing rule IDs.
+ *
+ * @example
+ * ```typescript
+ * const rule = await createTransactionRule(auth, client, {
+ *   merchantCriteria: [{ operator: 'contains', value: 'terrazzo' }],
+ *   setCategoryAction: 'CATEGORY_ID',
+ * });
+ * ```
+ */
+export async function createTransactionRule(
+  auth: AuthProvider,
+  client: MonarchGraphQLClient,
+  input: CreateTransactionRuleInput,
+): Promise<TransactionRule> {
+  const mutation = gql`
+    mutation Common_CreateTransactionRuleMutationV2($input: CreateTransactionRuleInput!) {
+      createTransactionRuleV2(input: $input) {
+        errors {
+          fieldErrors {
+            field
+            messages
+            __typename
+          }
+          message
+          code
+          __typename
+        }
+        __typename
+      }
+    }
+  `;
+
+  const before = new Set((await getTransactionRules(auth, client)).map((r) => r.id));
+  const response = await client.request<CreateTransactionRuleResponse>(
+    mutation,
+    auth,
+    CreateTransactionRuleResponseSchema,
+    { input },
+  );
+
+  const { errors } = response.createTransactionRuleV2;
+  if (errors) {
+    throw MonarchMutationError.fromPayload(errors);
+  }
+
+  const created = (await getTransactionRules(auth, client)).find((r) => !before.has(r.id));
+  if (!created) {
+    throw new MonarchMutationError('Rule creation failed: new rule not found', null, []);
+  }
+  return created;
 }

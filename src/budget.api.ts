@@ -15,7 +15,15 @@ import {
   BUDGET_STATUS_FIELDS,
   BudgetSettingsSchema,
   type BudgetSettings,
+  BUDGET_ITEM_FIELDS,
+  SetBudgetAmountInputSchema,
+  SetBudgetAmountResponseSchema,
+  type BudgetItem,
+  type SetBudgetAmountInput,
+  type SetBudgetAmountResponse,
 } from './budget.types.js';
+import { startOfCurrentMonth } from './dates.js';
+import { MonarchMutationError } from './common.types.js';
 
 /**
  * Fetches comprehensive budget report data including:
@@ -144,4 +152,64 @@ export async function getBudgetSettings(
 
   const response = await client.request<BudgetSettings>(query, auth, BudgetSettingsSchema);
   return response;
+}
+
+/**
+ * Set the planned budget amount for a category or category group for a month.
+ *
+ * @param auth - Authentication provider
+ * @param client - GraphQL client
+ * @param input - Amount, exactly one of categoryId/categoryGroupId, optional start month
+ * @returns The created or updated budget item
+ *
+ * @example
+ * ```typescript
+ * const item = await setBudgetAmount(auth, client, {
+ *   categoryId: 'CATEGORY_ID',
+ *   amount: 250,
+ *   startDate: '2026-10-01',
+ *   applyToFuture: false,
+ * });
+ * ```
+ */
+export async function setBudgetAmount(
+  auth: AuthProvider,
+  client: MonarchGraphQLClient,
+  input: SetBudgetAmountInput,
+): Promise<BudgetItem> {
+  const parsed = SetBudgetAmountInputSchema.parse(input);
+  const mutation = gql`
+    mutation Common_UpdateBudgetItem($input: UpdateOrCreateBudgetItemMutationInput!) {
+      updateOrCreateBudgetItem(input: $input) {
+        budgetItem {
+          ${BUDGET_ITEM_FIELDS}
+        }
+        __typename
+      }
+    }
+  `;
+
+  const variables = {
+    input: {
+      startDate: parsed.startDate ?? startOfCurrentMonth(),
+      timeframe: parsed.timeframe ?? 'month',
+      categoryId: parsed.categoryId ?? null,
+      categoryGroupId: parsed.categoryGroupId ?? null,
+      amount: parsed.amount,
+      applyToFuture: parsed.applyToFuture ?? false,
+    },
+  };
+
+  const response = await client.request<SetBudgetAmountResponse>(
+    mutation,
+    auth,
+    SetBudgetAmountResponseSchema,
+    variables,
+  );
+
+  const { budgetItem } = response.updateOrCreateBudgetItem;
+  if (!budgetItem) {
+    throw new MonarchMutationError('Budget update failed: no budget item returned', null, []);
+  }
+  return budgetItem;
 }

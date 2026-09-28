@@ -124,24 +124,73 @@ Reusable input schemas live in the library type modules next to their inferred T
 
 ```bash
 monarch-money accounts list [input]
+monarch-money accounts refresh [input]
+monarch-money accounts refresh-status [input]
 
 monarch-money transactions list [input]
 monarch-money transactions get [input]
 monarch-money transactions update [input]
+monarch-money transactions set-tags [input]
+monarch-money transactions splits get [input]
+monarch-money transactions splits update [input]
+
+monarch-money tags list [input]
+monarch-money tags create [input]
 
 monarch-money categories list
 monarch-money categories groups
 monarch-money categories get [input]
+monarch-money categories create [input]
+monarch-money categories restore [input]
 
 monarch-money budget report [input]
 monarch-money budget status
 monarch-money budget settings
+monarch-money budget set [input]
+
+monarch-money cashflow summary [input]
+monarch-money cashflow by-category [input]
+monarch-money cashflow breakdown [input]
 
 monarch-money portfolio [input]
 
+monarch-money recurring streams [input]
+monarch-money recurring aggregated [input]   # alias: recurring items
+
 monarch-money rules list
 monarch-money rules preview [input]
+monarch-money rules create [input]
 
 monarch-money schemas list
 monarch-money schemas get <name>
+```
+
+### Examples
+
+Mutating commands change live Monarch data: `budget set`, `categories create`, `categories restore`, `rules create`, `tags create`, `transactions set-tags`, `transactions splits update`, and `accounts refresh`.
+
+```bash
+# Set a category's planned amount for October only (use categoryGroupId for a group)
+monarch-money budget set '{"categoryId":"CATEGORY_ID","amount":250,"startDate":"2026-10-01","applyToFuture":false}'
+
+# Tags
+monarch-money tags list
+monarch-money tags create '{"name":"Reimbursable","color":"#19D2A5"}'
+monarch-money transactions set-tags '{"transactionId":"TRANSACTION_ID","tagIds":["TAG_ID"]}'
+
+# Splits: splitData replaces all splits; amounts must sum to the parent amount; [] removes splits
+monarch-money transactions splits get '{"id":"TRANSACTION_ID"}'
+monarch-money transactions splits update '{"transactionId":"TRANSACTION_ID","splitData":[{"merchantName":"Costco","amount":-60,"categoryId":"CATEGORY_ID"},{"merchantName":"Costco","amount":-40,"categoryId":"CATEGORY_ID"}]}'
+
+# Cash flow (omit both dates for the current month)
+monarch-money cashflow summary '{"startDate":"2026-09-01","endDate":"2026-09-30"}'
+monarch-money cashflow by-category '{"startDate":"2026-09-01","endDate":"2026-09-30"}'
+
+# Recurring
+monarch-money recurring streams
+monarch-money recurring items '{"startDate":"2026-10-01","endDate":"2026-10-31"}'
+
+# Refresh all accounts (or pass accountIds) and wait up to 5 minutes
+monarch-money accounts refresh '{"wait":true,"timeoutSeconds":300}'
+monarch-money accounts refresh-status
 ```

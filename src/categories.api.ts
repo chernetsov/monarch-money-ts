@@ -1,7 +1,14 @@
 import { gql } from 'graphql-request';
 import type { AuthProvider } from './auth.js';
 import { MonarchGraphQLClient } from './graphql.js';
+import { MonarchMutationError } from './common.types.js';
+import { startOfCurrentMonth } from './dates.js';
 import {
+  CreateCategoryResponseSchema,
+  type CreateCategoryInput,
+  type CreateCategoryResponse,
+  RestoreCategoryResponseSchema,
+  type RestoreCategoryResponse,
   ManageCategoryGroupsResponseSchema,
   type ManageCategoryGroupsResponse,
   GetBudgetCategoryGroupsResponseSchema,
@@ -131,4 +138,165 @@ export async function getBudgetCategory(
   const variables = { id: categoryId } as Record<string, unknown>;
   const response = await client.request(query, auth, GetBudgetCategoryResponseSchema, variables);
   return response.category;
+}
+
+/**
+ * Creates a budget category in an existing category group.
+ *
+ * @example
+ * ```typescript
+ * const category = await createCategory(auth, client, { groupId: 'GROUP_ID', name: 'Kids Sports', icon: '🏐' });
+ * ```
+ */
+export async function createCategory(
+  auth: AuthProvider,
+  client: MonarchGraphQLClient,
+  input: CreateCategoryInput,
+): Promise<BudgetCategoryDetail> {
+  const mutation = gql`
+    mutation Web_CreateCategory($input: CreateCategoryInput!) {
+      createCategory(input: $input) {
+        errors {
+          fieldErrors {
+            field
+            messages
+            __typename
+          }
+          message
+          code
+          __typename
+        }
+        category {
+          id
+          order
+          name
+          icon
+          systemCategory
+          systemCategoryDisplayName
+          budgetVariability
+          excludeFromBudget
+          isSystemCategory
+          isDisabled
+          group {
+            id
+            type
+            groupLevelBudgetingEnabled
+            __typename
+          }
+          rolloverPeriod {
+            id
+            startMonth
+            startingBalance
+            type
+            frequency
+            targetAmount
+            __typename
+          }
+          __typename
+        }
+        __typename
+      }
+    }
+  `;
+
+  const response = await client.request<CreateCategoryResponse>(
+    mutation,
+    auth,
+    CreateCategoryResponseSchema,
+    {
+      input: {
+        group: input.groupId,
+        name: input.name,
+        icon: input.icon ?? '\u2753',
+        rolloverEnabled: input.rolloverEnabled ?? false,
+        rolloverType: input.rolloverType ?? 'monthly',
+        rolloverStartMonth: input.rolloverStartMonth ?? startOfCurrentMonth(),
+      },
+    },
+  );
+
+  const { category, errors } = response.createCategory;
+  if (errors) {
+    throw MonarchMutationError.fromPayload(errors);
+  }
+  if (!category) {
+    throw new MonarchMutationError('Category creation failed: no category returned', null, []);
+  }
+  return category;
+}
+
+/**
+ * Re-enables a disabled system category (the web app's "Enable category" action).
+ *
+ * @example
+ * ```typescript
+ * const rent = await restoreCategory(auth, client, 'CATEGORY_ID');
+ * ```
+ */
+export async function restoreCategory(
+  auth: AuthProvider,
+  client: MonarchGraphQLClient,
+  categoryId: string,
+): Promise<BudgetCategoryDetail> {
+  const mutation = gql`
+    mutation Web_RestoreCategory($id: UUID!) {
+      restoreCategory(id: $id) {
+        errors {
+          fieldErrors {
+            field
+            messages
+            __typename
+          }
+          message
+          code
+          __typename
+        }
+        category {
+          id
+          order
+          name
+          icon
+          systemCategory
+          systemCategoryDisplayName
+          budgetVariability
+          excludeFromBudget
+          isSystemCategory
+          isDisabled
+          group {
+            id
+            type
+            groupLevelBudgetingEnabled
+            __typename
+          }
+          rolloverPeriod {
+            id
+            startMonth
+            startingBalance
+            type
+            frequency
+            targetAmount
+            __typename
+          }
+          __typename
+        }
+        __typename
+      }
+    }
+  `;
+
+  const response = await client.request<RestoreCategoryResponse>(
+    mutation,
+    auth,
+    RestoreCategoryResponseSchema,
+    { id: categoryId },
+  );
+
+  const { category, errors } = response.restoreCategory;
+  if (errors) {
+    throw MonarchMutationError.fromPayload(errors);
+  }
+  if (!category) {
+    throw new MonarchMutationError('Category restore failed: no category returned', null, []);
+  }
+  return category;
 }

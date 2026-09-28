@@ -6,38 +6,39 @@
 
 This library covers a subset of Monarch Money's GraphQL API. When adding new functionality, check what's already implemented and what gaps remain.
 
-**Implemented (14 functions across 6 domains):**
+**Implemented (30 functions across 9 domains):**
 
-| Domain       | Functions                                                             | File                  |
-| ------------ | --------------------------------------------------------------------- | --------------------- |
-| Accounts     | `getAccounts`                                                         | `accounts.api.ts`     |
-| Transactions | `getTransactions`, `getTransaction`, `updateTransaction`              | `transactions.api.ts` |
-| Categories   | `getBudgetCategories`, `getBudgetCategoryGroups`, `getBudgetCategory` | `categories.api.ts`   |
-| Budgets      | `getBudgetReport`, `getBudgetStatus`, `getBudgetSettings`             | `budget.api.ts`       |
-| Portfolio    | `getPortfolio`                                                        | `portfolio.api.ts`    |
-| Rules        | `getTransactionRules`, `previewTransactionRule`                       | `rules.api.ts`        |
+| Domain       | Functions                                                                                                           | File                  |
+| ------------ | ------------------------------------------------------------------------------------------------------------------- | --------------------- |
+| Accounts     | `getAccounts`, `requestAccountsRefresh`, `getAccountsRefreshStatus`, `isAccountsRefreshComplete`, `refreshAccounts` | `accounts.api.ts`     |
+| Transactions | `getTransactions`, `getTransaction`, `updateTransaction`, `getTransactionSplits`, `updateTransactionSplits`         | `transactions.api.ts` |
+| Tags         | `getTransactionTags`, `createTransactionTag`, `setTransactionTags`                                                  | `tags.api.ts`         |
+| Categories   | `getBudgetCategories`, `getBudgetCategoryGroups`, `getBudgetCategory`, `createCategory`, `restoreCategory`          | `categories.api.ts`   |
+| Budgets      | `getBudgetReport`, `getBudgetStatus`, `getBudgetSettings`, `setBudgetAmount`                                        | `budget.api.ts`       |
+| Cash Flow    | `getCashflow`, `getCashflowSummary`                                                                                 | `cashflow.api.ts`     |
+| Portfolio    | `getPortfolio`                                                                                                      | `portfolio.api.ts`    |
+| Rules        | `getTransactionRules`, `previewTransactionRule`, `createTransactionRule`                                            | `rules.api.ts`        |
+| Recurring    | `getRecurringTransactionStreams`, `getAggregatedRecurringItems`                                                     | `recurring.api.ts`    |
 
 **Not yet implemented (known gaps):**
 
-- **Accounts**: create/update/delete, refresh sync, balance history, snapshots, account types
-- **Transactions**: create, delete, splits, summary/aggregates
-- **Categories**: create, delete
-- **Tags**: list, create, set on transactions (entire domain missing)
-- **Budgets**: set budget amount
-- **Rules**: create, update, delete
-- **Cash Flow**: breakdown and summary (entire domain missing)
-- **Recurring Transactions**: list upcoming (entire domain missing)
+- **Accounts**: create/update/delete, balance history, snapshots, account types
+- **Transactions**: create, delete, summary/aggregates
+- **Categories**: update, delete
+- **Rules**: update, delete
+- **Recurring Transactions**: create/update/delete streams, mark items paid
 - **Institutions**: list connected institutions (entire domain missing)
 - **Subscription**: get subscription details (entire domain missing)
 
 Reference: the [Python monarchmoney library](https://github.com/hammem/monarchmoney) covers the broadest known surface. Use it and captured traffic logs to identify fields and query shapes when adding new APIs.
 
-# Traffic Logs and mmtraf tool
+# Traffic capture and analysis
 
-According to convention user puts gitignored traffic logs under traffic/ directory.
-This repository has a tool called mmtraf that simplifies working with these traffic logs. You have to read [mmtraf.md](mmtraf.md) for usage docs. Always use this tool to look at the contents of traffic log files (they are too large to load into context directly).
+Gitignored traffic logs live under `traffic/`. New captures use **mmcap** (`pnpm mmcap`) — interactive headed browser, manual login, append-only JSONL at `traffic/logs/mmcap-YYYY-MM-DD.jsonl`. See [mmcap.md](mmcap.md).
 
-First see the list of files using `list`, then use `summary` to find the request of interest. Next, inspect the request with `body:req-at` and `graphql:req-at`, infer the response schema with `schema:res-at`, and walk the response body using `body:res-at` and jq.
+**mmtraf** (`pnpm mmtraf`) analyzes logs (JSONL and legacy JSON arrays). Read [mmtraf.md](mmtraf.md). Never load full log files into context.
+
+Workflow: `pnpm mmtraf list` → `summary logs/mmcap-....jsonl` → `body:req-at` / `graphql:req-at` → `schema:res-at` → `body:res-at` with jq.
 
 # Building APIs
 

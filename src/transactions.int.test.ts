@@ -1,10 +1,25 @@
 import { describe, it, expect } from 'vitest';
 import { getIntegrationContext } from './test-utils.js';
-import { getTransaction, getTransactions, updateTransaction } from './transactions.api.js';
+import {
+  getTransaction,
+  getTransactions,
+  getTransactionSplits,
+  updateTransaction,
+} from './transactions.api.js';
 import { getBudgetCategories } from './categories.api.js';
 import { MonarchGraphQLError } from './common.types.js';
 
 describe('integration: transactions', () => {
+  it('gets transaction splits', async () => {
+    const { auth, client } = getIntegrationContext();
+    const txnResult = await getTransactions(auth, client, { limit: 1 });
+    expect(txnResult.transactions.length).toBeGreaterThan(0);
+
+    const splits = await getTransactionSplits(auth, client, { id: txnResult.transactions[0].id });
+    expect(splits?.id).toBe(txnResult.transactions[0].id);
+    expect(Array.isArray(splits?.splitTransactions)).toBe(true);
+  });
+
   it('gets transactions (no filters)', async () => {
     const { auth, client } = getIntegrationContext();
     const result = await getTransactions(auth, client);
