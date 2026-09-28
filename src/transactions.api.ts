@@ -151,7 +151,7 @@ export async function getTransactions(
  * @example
  * ```typescript
  * const transaction = await getTransaction(auth, client, {
- *   id: '231087434332258839',
+ *   id: 'TRANSACTION_ID',
  *   redirectPosted: true
  * });
  *
@@ -304,7 +304,7 @@ export async function updateTransaction(
  *
  * @example
  * ```typescript
- * const splits = await getTransactionSplits(auth, client, { id: '231907009223344866' });
+ * const splits = await getTransactionSplits(auth, client, { id: 'TRANSACTION_ID' });
  * ```
  */
 export async function getTransactionSplits(
@@ -336,7 +336,7 @@ export async function getTransactionSplits(
  * @example
  * ```typescript
  * await updateTransactionSplits(auth, client, {
- *   transactionId: '231907009223344866',
+ *   transactionId: 'TRANSACTION_ID',
  *   splitData: [
  *     { merchantName: 'Costco', amount: -60, categoryId: 'GROCERIES_ID' },
  *     { merchantName: 'Costco', amount: -40, categoryId: 'HOUSEHOLD_ID' },

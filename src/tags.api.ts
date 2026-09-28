@@ -104,7 +104,7 @@ export async function createTransactionTag(
  *
  * @example
  * ```typescript
- * await setTransactionTags(auth, client, { transactionId: '231907009223344866', tagIds: ['123'] });
+ * await setTransactionTags(auth, client, { transactionId: 'TRANSACTION_ID', tagIds: ['123'] });
  * ```
  */
 export async function setTransactionTags(
