@@ -196,7 +196,9 @@ async function printSnapshot(page: Page, includeAll: boolean): Promise<void> {
           parts.unshift(tag);
           break;
         }
-        const sameTag = Array.from(parent.children).filter((child) => child.tagName === cur!.tagName);
+        const sameTag = Array.from(parent.children).filter(
+          (child) => child.tagName === cur!.tagName,
+        );
         const index = sameTag.indexOf(cur) + 1;
         parts.unshift(sameTag.length > 1 ? `${tag}:nth-of-type(${index})` : tag);
         cur = parent;
@@ -221,7 +223,9 @@ async function printSnapshot(page: Page, includeAll: boolean): Promise<void> {
         name: textOf(el),
         selector: selectorOf(el),
       }))
-      .filter((row) => all || row.name || row.role || ['input', 'select', 'textarea'].includes(row.tag))
+      .filter(
+        (row) => all || row.name || row.role || ['input', 'select', 'textarea'].includes(row.tag),
+      )
       .slice(0, 120);
   }, includeAll);
 
@@ -274,7 +278,10 @@ async function clickTarget(page: Page, arg: string): Promise<void> {
       output.write('  Usage: click role <role> <name>\n');
       return;
     }
-    await page.getByRole(role as any, { name, exact: false }).first().click();
+    await page
+      .getByRole(role as any, { name, exact: false })
+      .first()
+      .click();
     output.write(`  clicked role ${role} "${name}"\n`);
     return;
   }
@@ -450,9 +457,7 @@ mmcap — interactive GraphQL capture
 }
 
 const program = new Command();
-program
-  .name('mmcap')
-  .description('Capture Monarch GraphQL traffic to traffic/logs/*.jsonl');
+program.name('mmcap').description('Capture Monarch GraphQL traffic to traffic/logs/*.jsonl');
 
 // `pnpm mmcap` — interactive (no subcommand)
 program

@@ -32,24 +32,24 @@ pnpm mmcap --repl
 
 REPL commands:
 
-| Command | Action |
-| -------- | ------ |
-| `goto /accounts` | Navigate to a path on the app |
-| `goto https://...` | Navigate to a full URL |
-| `back` | Browser back |
-| `reload` | Reload page |
-| `snapshot` | Print visible interactive elements and headings |
-| `snapshot all` | Print more visible page elements |
-| `shot` | Save a full-page screenshot to `traffic/screenshots/` |
-| `shot budget.png` | Save a named screenshot |
-| `click text "Transactions"` | Click by visible text |
-| `click role button "Add Account"` | Click by ARIA role and name |
-| `click css "#selector"` | Click by CSS selector |
-| `fill "#username" "me@example.com"` | Fill a CSS selector |
-| `press Enter` | Press a key |
-| `wait 1500` | Wait for page activity |
-| `help` | Show commands |
-| `stop` | End session |
+| Command                             | Action                                                |
+| ----------------------------------- | ----------------------------------------------------- |
+| `goto /accounts`                    | Navigate to a path on the app                         |
+| `goto https://...`                  | Navigate to a full URL                                |
+| `back`                              | Browser back                                          |
+| `reload`                            | Reload page                                           |
+| `snapshot`                          | Print visible interactive elements and headings       |
+| `snapshot all`                      | Print more visible page elements                      |
+| `shot`                              | Save a full-page screenshot to `traffic/screenshots/` |
+| `shot budget.png`                   | Save a named screenshot                               |
+| `click text "Transactions"`         | Click by visible text                                 |
+| `click role button "Add Account"`   | Click by ARIA role and name                           |
+| `click css "#selector"`             | Click by CSS selector                                 |
+| `fill "#username" "me@example.com"` | Fill a CSS selector                                   |
+| `press Enter`                       | Press a key                                           |
+| `wait 1500`                         | Wait for page activity                                |
+| `help`                              | Show commands                                         |
+| `stop`                              | End session                                           |
 
 You can mix REPL navigation with normal mouse interaction in the same session. Treat this as a convenience, not the main browser-control abstraction.
 

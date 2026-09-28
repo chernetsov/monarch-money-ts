@@ -57,11 +57,7 @@ export function operationNameFromEntry(entry: TrafficEntry): string | undefined 
   let payload: unknown = entry.requestBody;
   if (typeof payload === 'string') {
     const trimmed = payload.trim();
-    if (
-      ctype.includes('application/json') ||
-      trimmed.startsWith('{') ||
-      trimmed.startsWith('[')
-    ) {
+    if (ctype.includes('application/json') || trimmed.startsWith('{') || trimmed.startsWith('[')) {
       try {
         payload = JSON.parse(trimmed);
       } catch {
@@ -69,7 +65,11 @@ export function operationNameFromEntry(entry: TrafficEntry): string | undefined 
       }
     }
   }
-  if (payload && typeof payload === 'object' && typeof (payload as { operationName?: string }).operationName === 'string') {
+  if (
+    payload &&
+    typeof payload === 'object' &&
+    typeof (payload as { operationName?: string }).operationName === 'string'
+  ) {
     return (payload as { operationName: string }).operationName;
   }
   return undefined;
