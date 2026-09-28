@@ -161,8 +161,10 @@ export const TransactionFiltersInputSchema = z
     goalIds: z.array(z.string()).optional(),
     startDate: z.string().optional(), // YYYY-MM-DD
     endDate: z.string().optional(), // YYYY-MM-DD
+    /** Compared against the absolute amount, so debits and credits match alike. */
     amount: z.number().optional(),
-    amountOperator: z.string().optional(), // "lt" | "lte" | "eq" | "gte" | "gt"
+    /** Defaults to "eq". Monarch only supports inclusive bounds, so "gt"/"lt" behave like "gte"/"lte". */
+    amountOperator: z.enum(['lt', 'lte', 'eq', 'gte', 'gt']).optional(),
     isPending: z.boolean().optional(), // Note: filter uses isPending, but Transaction type has pending field
     hideFromReports: z.boolean().optional(),
     needsReview: z.boolean().optional(),

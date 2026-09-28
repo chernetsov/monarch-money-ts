@@ -194,6 +194,28 @@ export const RestoreCategoryResponseSchema = z
   .strict();
 export type RestoreCategoryResponse = z.infer<typeof RestoreCategoryResponseSchema>;
 
+export const DeleteCategoryInputSchema = z
+  .object({
+    categoryId: z.string().min(1),
+    /** Category that receives the deleted category's transactions and rules. */
+    moveToCategoryId: z.string().min(1).optional(),
+  })
+  .strict();
+export type DeleteCategoryInput = z.infer<typeof DeleteCategoryInputSchema>;
+
+export const DeleteCategoryResponseSchema = z
+  .object({
+    deleteCategory: z
+      .object({
+        errors: MutationErrorSchema.nullable(),
+        deleted: z.boolean().nullable(),
+        __typename: z.string().optional(),
+      })
+      .strict(),
+  })
+  .strict();
+export type DeleteCategoryResponse = z.infer<typeof DeleteCategoryResponseSchema>;
+
 export const GetBudgetCategoryGroupsResponseSchema = z
   .object({
     categoryGroups: z.array(BudgetCategoryGroupWithBudgetingSchema),

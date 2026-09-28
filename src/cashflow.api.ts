@@ -12,12 +12,13 @@ import {
   type GetCashflowSummaryResponse,
 } from './cashflow.types.js';
 import { endOfCurrentMonth, startOfCurrentMonth } from './dates.js';
+import { toTransactionFilterInput } from './transactions.api.js';
 
 function buildCashflowVariables(input?: CashflowInput): Record<string, unknown> {
   const parsed = CashflowInputSchema.parse(input ?? {});
   return {
     filters: {
-      ...parsed.filters,
+      ...toTransactionFilterInput(parsed.filters ?? {}),
       startDate: parsed.startDate ?? startOfCurrentMonth(),
       endDate: parsed.endDate ?? endOfCurrentMonth(),
     },

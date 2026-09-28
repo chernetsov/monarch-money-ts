@@ -19,9 +19,15 @@ import {
   CashflowSchema,
   CashflowSummarySchema,
 } from '../cashflow.types.js';
-import { createTransactionTag, getTransactionTags, setTransactionTags } from '../tags.api.js';
+import {
+  createTransactionTag,
+  deleteTransactionTag,
+  getTransactionTags,
+  setTransactionTags,
+} from '../tags.api.js';
 import {
   CreateTransactionTagInputSchema,
+  DeleteTransactionTagInputSchema,
   GetTransactionTagsInputSchema,
   SetTransactionTagsInputSchema,
   TransactionTagAssignmentSchema,
@@ -29,6 +35,7 @@ import {
 } from '../tags.types.js';
 import {
   createCategory,
+  deleteCategory,
   restoreCategory,
   getBudgetCategory,
   getBudgetCategoryGroups,
@@ -36,6 +43,7 @@ import {
 } from '../categories.api.js';
 import {
   CreateCategoryInputSchema,
+  DeleteCategoryInputSchema,
   BudgetCategoryDetailSchema,
   BudgetCategoryGroupWithBudgetingSchema,
   ManageCategoryGroupsResponseSchema,
@@ -66,6 +74,7 @@ import {
 } from '../recurring.types.js';
 import {
   createTransactionRule,
+  deleteTransactionRule,
   getTransactionRules,
   previewTransactionRule,
 } from '../rules.api.js';
@@ -127,6 +136,9 @@ const TransactionsListOutputSchema = z
 const CategoriesGroupsOutputSchema = z.array(BudgetCategoryGroupWithBudgetingSchema);
 const TransactionRulesOutputSchema = z.array(TransactionRuleSchema);
 
+const DeleteTransactionRuleInputSchema = z.object({ ruleId: z.string().min(1) }).strict();
+const DeletedOutputSchema = z.literal(true);
+
 const PreviewTransactionRuleInputSchema = z
   .object({
     rule: RulePreviewInputSchema,
@@ -158,6 +170,9 @@ const schemaRegistry = new Map<string, z.ZodTypeAny>([
   ['input.cashflow', CashflowInputSchema],
   ['input.rule.preview', PreviewTransactionRuleInputSchema],
   ['input.rule.create', CreateTransactionRuleInputSchema],
+  ['input.rule.delete', DeleteTransactionRuleInputSchema],
+  ['input.category.delete', DeleteCategoryInputSchema],
+  ['input.tag.delete', DeleteTransactionTagInputSchema],
   ['output.auth.metadata', JsonObjectSchema],
   ['output.accounts.list', AccountsListOutputSchema],
   ['output.accounts.refresh', AccountsRefreshResultSchema],
@@ -186,6 +201,7 @@ const schemaRegistry = new Map<string, z.ZodTypeAny>([
   ['output.rules.list', TransactionRulesOutputSchema],
   ['output.rule.preview', TransactionRulePreviewSchema],
   ['output.rule', TransactionRuleSchema],
+  ['output.deleted', DeletedOutputSchema],
 ]);
 
 const program = new Command();
@@ -417,6 +433,18 @@ const tagsCreate = tags
   );
 addSchemaHelp(tagsCreate, 'input.tag.create', 'output.tag');
 
+const tagsDelete = tags
+  .command('delete')
+  .description('Delete a transaction tag (removes it from all transactions)')
+  .argument('[input]', 'JSON input: {"tagId":"..."}')
+  .action(
+    runCommand(DeleteTransactionTagInputSchema, async (input) => {
+      const { auth, client } = createContext();
+      return deleteTransactionTag(auth, client, input);
+    }),
+  );
+addSchemaHelp(tagsDelete, 'input.tag.delete', 'output.deleted');
+
 const categories = program.command('categories').description('Categories API');
 const categoriesList = categories
   .command('list')
@@ -475,6 +503,18 @@ const categoriesRestore = categories
     }),
   );
 addSchemaHelp(categoriesRestore, 'input.category.get', 'output.category.detail');
+
+const categoriesDelete = categories
+  .command('delete')
+  .description('Delete a custom category or disable a system category')
+  .argument('[input]', 'JSON input: {"categoryId":"...","moveToCategoryId":"..."}')
+  .action(
+    runCommand(DeleteCategoryInputSchema, async (input) => {
+      const { auth, client } = createContext();
+      return deleteCategory(auth, client, input);
+    }),
+  );
+addSchemaHelp(categoriesDelete, 'input.category.delete', 'output.deleted');
 
 const budget = program.command('budget').description('Budget API');
 const budgetReport = budget
@@ -639,6 +679,18 @@ const rulesCreate = rules
     }),
   );
 addSchemaHelp(rulesCreate, 'input.rule.create', 'output.rule');
+
+const rulesDelete = rules
+  .command('delete')
+  .description('Delete a transaction rule')
+  .argument('[input]', 'JSON input: {"ruleId":"..."}')
+  .action(
+    runCommand(DeleteTransactionRuleInputSchema, async ({ ruleId }) => {
+      const { auth, client } = createContext();
+      return deleteTransactionRule(auth, client, ruleId);
+    }),
+  );
+addSchemaHelp(rulesDelete, 'input.rule.delete', 'output.deleted');
 
 program.exitOverride();
 

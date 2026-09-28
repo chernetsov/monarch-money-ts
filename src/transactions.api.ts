@@ -218,26 +218,26 @@ export async function getTransaction(
  * ```typescript
  * // Update category
  * const updated = await updateTransaction(auth, client, {
- *   id: '231907009223344866',
- *   category: '170834763911676527',
+ *   id: 'TRANSACTION_ID',
+ *   category: 'CATEGORY_ID',
  *   isRecommendedCategory: false
  * });
  *
  * // Mark as reviewed
  * const reviewed = await updateTransaction(auth, client, {
- *   id: '231907009223344866',
+ *   id: 'TRANSACTION_ID',
  *   reviewed: true
  * });
  *
  * // Mark as needing review
  * const needsReview = await updateTransaction(auth, client, {
- *   id: '231907009223344866',
+ *   id: 'TRANSACTION_ID',
  *   needsReview: true
  * });
  *
  * // Update notes
  * const withNotes = await updateTransaction(auth, client, {
- *   id: '231907009223344866',
+ *   id: 'TRANSACTION_ID',
  *   notes: 'Business expense'
  * });
  * ```
@@ -338,8 +338,8 @@ export async function getTransactionSplits(
  * await updateTransactionSplits(auth, client, {
  *   transactionId: '231907009223344866',
  *   splitData: [
- *     { merchantName: 'Costco', amount: -60, categoryId: '170834763911676527' },
- *     { merchantName: 'Costco', amount: -40, categoryId: '170834763911676528' },
+ *     { merchantName: 'Costco', amount: -60, categoryId: 'GROCERIES_ID' },
+ *     { merchantName: 'Costco', amount: -40, categoryId: 'HOUSEHOLD_ID' },
  *   ],
  * });
  * ```

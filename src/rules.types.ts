@@ -439,6 +439,19 @@ export const CreateTransactionRuleResponseSchema = z
   .strict();
 export type CreateTransactionRuleResponse = z.infer<typeof CreateTransactionRuleResponseSchema>;
 
+export const DeleteTransactionRuleResponseSchema = z
+  .object({
+    deleteTransactionRule: z
+      .object({
+        deleted: z.boolean().nullable(),
+        errors: MutationErrorSchema.nullable(),
+        __typename: z.string().optional(),
+      })
+      .strict(),
+  })
+  .strict();
+export type DeleteTransactionRuleResponse = z.infer<typeof DeleteTransactionRuleResponseSchema>;
+
 // ---------------- Preview Transaction Rule Response ----------------
 
 /**

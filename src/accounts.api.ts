@@ -135,12 +135,11 @@ export async function requestAccountsRefresh(
   );
 
   const { success, errors } = response.forceRefreshAccounts;
+  if (errors) {
+    throw MonarchMutationError.fromPayload(errors);
+  }
   if (!success) {
-    throw new MonarchMutationError(
-      errors?.message ?? 'Account refresh request failed',
-      errors?.code ?? null,
-      (errors?.fieldErrors ?? []).map((fe) => ({ field: fe.field, messages: fe.messages })),
-    );
+    throw new MonarchMutationError('Account refresh request failed', null, []);
   }
   return true;
 }

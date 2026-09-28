@@ -5,7 +5,12 @@ import type { MonarchGraphQLClient } from './graphql.js';
 import { MonarchMutationError } from './common.types.js';
 import { setBudgetAmount } from './budget.api.js';
 import { SetBudgetAmountInputSchema } from './budget.types.js';
-import { createTransactionTag, getTransactionTags, setTransactionTags } from './tags.api.js';
+import {
+  createTransactionTag,
+  deleteTransactionTag,
+  getTransactionTags,
+  setTransactionTags,
+} from './tags.api.js';
 import {
   getTransactionSplits,
   toTransactionFilterInput,
@@ -15,8 +20,8 @@ import { getCashflow, getCashflowSummary } from './cashflow.api.js';
 import { CashflowInputSchema } from './cashflow.types.js';
 import { getAccountsRefreshStatus, refreshAccounts } from './accounts.api.js';
 import { startOfCurrentMonth, endOfCurrentMonth } from './dates.js';
-import { createCategory, restoreCategory } from './categories.api.js';
-import { createTransactionRule } from './rules.api.js';
+import { createCategory, deleteCategory, restoreCategory } from './categories.api.js';
+import { createTransactionRule, deleteTransactionRule } from './rules.api.js';
 
 interface RecordedCall {
   query: string;
@@ -227,6 +232,23 @@ describe('transaction splits', () => {
 
 describe('cashflow', () => {
   const summary = { sumIncome: 10, sumExpense: -5, savings: 5, savingsRate: 0.5 };
+
+  it('translates library filter names for the server', async () => {
+    const { client, calls } = mockClient({ summary: [{ summary }] });
+    await getCashflowSummary(auth, client, {
+      startDate: '2026-09-01',
+      endDate: '2026-09-30',
+      filters: { categoryIds: ['c1'], accountIds: ['a1'] },
+    });
+    expect(calls[0].variables).toEqual({
+      filters: {
+        categories: ['c1'],
+        accounts: ['a1'],
+        startDate: '2026-09-01',
+        endDate: '2026-09-30',
+      },
+    });
+  });
 
   it('returns the summary aggregate for a date range', async () => {
     const { client, calls } = mockClient({ summary: [{ summary }] });
@@ -516,5 +538,48 @@ describe('MonarchMutationError.fromPayload', () => {
     expect(error.fieldErrors).toEqual([
       { field: 'category', messages: ['Category does not exist'] },
     ]);
+  });
+});
+
+describe('delete mutations', () => {
+  const failed = {
+    message: null,
+    code: null,
+    fieldErrors: [{ field: 'id', messages: ['Not found'] }],
+  };
+
+  it('deletes a category, forwarding moveToCategoryId', async () => {
+    const { client, calls } = mockClient({ deleteCategory: { errors: null, deleted: true } });
+    await expect(
+      deleteCategory(auth, client, { categoryId: 'c1', moveToCategoryId: 'c2' }),
+    ).resolves.toBe(true);
+    expect(calls[0].query).toContain('mutation Web_DeleteCategory');
+    expect(calls[0].variables).toEqual({ id: 'c1', moveToCategoryId: 'c2' });
+  });
+
+  it('throws when a category is not deleted', async () => {
+    const { client } = mockClient({ deleteCategory: { errors: null, deleted: false } });
+    await expect(deleteCategory(auth, client, { categoryId: 'c1' })).rejects.toBeInstanceOf(
+      MonarchMutationError,
+    );
+  });
+
+  it('deletes a tag', async () => {
+    const { client, calls } = mockClient({ deleteTransactionTag: { errors: null } });
+    await expect(deleteTransactionTag(auth, client, { tagId: 't1' })).resolves.toBe(true);
+    expect(calls[0].variables).toEqual({ tagId: 't1' });
+  });
+
+  it('deletes a rule even when Monarch reports deleted: false', async () => {
+    const { client, calls } = mockClient({
+      deleteTransactionRule: { deleted: false, errors: null },
+    });
+    await expect(deleteTransactionRule(auth, client, 'r1')).resolves.toBe(true);
+    expect(calls[0].variables).toEqual({ id: 'r1' });
+  });
+
+  it('surfaces field errors from delete payloads', async () => {
+    const { client } = mockClient({ deleteTransactionRule: { deleted: false, errors: failed } });
+    await expect(deleteTransactionRule(auth, client, 'r1')).rejects.toThrow('id: Not found');
   });
 });

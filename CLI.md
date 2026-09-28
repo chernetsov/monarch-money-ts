@@ -136,12 +136,14 @@ monarch-money transactions splits update [input]
 
 monarch-money tags list [input]
 monarch-money tags create [input]
+monarch-money tags delete [input]
 
 monarch-money categories list
 monarch-money categories groups
 monarch-money categories get [input]
 monarch-money categories create [input]
 monarch-money categories restore [input]
+monarch-money categories delete [input]
 
 monarch-money budget report [input]
 monarch-money budget status
@@ -160,6 +162,7 @@ monarch-money recurring aggregated [input]   # alias: recurring items
 monarch-money rules list
 monarch-money rules preview [input]
 monarch-money rules create [input]
+monarch-money rules delete [input]
 
 monarch-money schemas list
 monarch-money schemas get <name>
@@ -167,7 +170,7 @@ monarch-money schemas get <name>
 
 ### Examples
 
-Mutating commands change live Monarch data: `budget set`, `categories create`, `categories restore`, `rules create`, `tags create`, `transactions set-tags`, `transactions splits update`, and `accounts refresh`.
+Mutating commands change live Monarch data: `budget set`, `categories create`, `categories restore`, `categories delete`, `rules create`, `rules delete`, `tags create`, `tags delete`, `transactions set-tags`, `transactions splits update`, and `accounts refresh`.
 
 ```bash
 # Set a category's planned amount for October only (use categoryGroupId for a group)

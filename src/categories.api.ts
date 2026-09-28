@@ -8,6 +8,9 @@ import {
   type CreateCategoryInput,
   type CreateCategoryResponse,
   RestoreCategoryResponseSchema,
+  DeleteCategoryResponseSchema,
+  type DeleteCategoryInput,
+  type DeleteCategoryResponse,
   type RestoreCategoryResponse,
   ManageCategoryGroupsResponseSchema,
   type ManageCategoryGroupsResponse,
@@ -299,4 +302,55 @@ export async function restoreCategory(
     throw new MonarchMutationError('Category restore failed: no category returned', null, []);
   }
   return category;
+}
+
+/**
+ * Delete a category. Custom categories are removed; system categories are disabled
+ * and can be re-enabled with `restoreCategory`. Pass `moveToCategoryId` when the
+ * category still has transactions.
+ *
+ * @example
+ * ```typescript
+ * await deleteCategory(auth, client, { categoryId: 'CATEGORY_ID', moveToCategoryId: 'OTHER_ID' });
+ * ```
+ */
+export async function deleteCategory(
+  auth: AuthProvider,
+  client: MonarchGraphQLClient,
+  input: DeleteCategoryInput,
+): Promise<true> {
+  const mutation = gql`
+    mutation Web_DeleteCategory($id: UUID!, $moveToCategoryId: UUID) {
+      deleteCategory(id: $id, moveToCategoryId: $moveToCategoryId) {
+        errors {
+          fieldErrors {
+            field
+            messages
+            __typename
+          }
+          message
+          code
+          __typename
+        }
+        deleted
+        __typename
+      }
+    }
+  `;
+
+  const response = await client.request<DeleteCategoryResponse>(
+    mutation,
+    auth,
+    DeleteCategoryResponseSchema,
+    { id: input.categoryId, moveToCategoryId: input.moveToCategoryId },
+  );
+
+  const { deleted, errors } = response.deleteCategory;
+  if (errors) {
+    throw MonarchMutationError.fromPayload(errors);
+  }
+  if (!deleted) {
+    throw new MonarchMutationError('Category deletion failed: category was not deleted', null, []);
+  }
+  return true;
 }

@@ -19,13 +19,17 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/), and this
 - Account refresh APIs `requestAccountsRefresh`, `getAccountsRefreshStatus`, `isAccountsRefreshComplete`, `refreshAccounts` and CLI `accounts refresh` (optional `wait`) and `accounts refresh-status`
 - Category APIs `createCategory`, `restoreCategory` and CLI `categories create`, `categories restore` (re-enables a disabled system category)
 - Rule API `createTransactionRule` and CLI `rules create`
+- Delete APIs `deleteCategory`, `deleteTransactionTag`, `deleteTransactionRule` and CLI `categories delete`, `tags delete`, `rules delete`
 - CLI schemas for the new commands (`input.budget.set`, `input.category.create`, `input.rule.create`, `input.tags.list`, `input.cashflow`, `input.accounts.refresh`, and matching outputs)
 - Mocked unit tests for the new APIs (`src/api.test.ts`)
+- Integration tests for transaction filters, mutation field errors, cash flow filters, and create/delete round trips for tags, categories, rules, and budget amounts (each cleans up after itself)
 
 ### Fixed
 
 - `getTransactions` filters `accountIds`, `categoryIds`, `merchantIds`, `tagIds`, `goalIds`, `isSplitTransaction`, and `amount`/`amountOperator` are translated to the server's `TransactionFilterInput` fields; previously they failed with a masked server error
 - Mutation errors with a null `message` (e.g. updating a transaction to a disabled category) now surface the field errors instead of a schema validation failure; `MutationErrorSchema.message` is nullable and `MonarchMutationError.fromPayload` builds the message
+- Cash flow `filters` use the same server field translation as `getTransactions`
+- `amountOperator` is validated as `lt`, `lte`, `eq`, `gte`, or `gt`
 
 ### Changed
 

@@ -6,6 +6,8 @@ import {
   CreateTransactionRuleResponseSchema,
   type CreateTransactionRuleInput,
   type CreateTransactionRuleResponse,
+  DeleteTransactionRuleResponseSchema,
+  type DeleteTransactionRuleResponse,
   TRANSACTION_RULE_FIELDS,
   GetTransactionRulesResponseSchema,
   type TransactionRule,
@@ -132,4 +134,51 @@ export async function createTransactionRule(
     throw new MonarchMutationError('Rule creation failed: new rule not found', null, []);
   }
   return created;
+}
+
+/**
+ * Delete a transaction rule. Transactions it already changed keep their values.
+ *
+ * @example
+ * ```typescript
+ * await deleteTransactionRule(auth, client, 'RULE_ID');
+ * ```
+ */
+export async function deleteTransactionRule(
+  auth: AuthProvider,
+  client: MonarchGraphQLClient,
+  ruleId: string,
+): Promise<true> {
+  const mutation = gql`
+    mutation Common_DeleteTransactionRule($id: ID!) {
+      deleteTransactionRule(id: $id) {
+        deleted
+        errors {
+          fieldErrors {
+            field
+            messages
+            __typename
+          }
+          message
+          code
+          __typename
+        }
+        __typename
+      }
+    }
+  `;
+
+  const response = await client.request<DeleteTransactionRuleResponse>(
+    mutation,
+    auth,
+    DeleteTransactionRuleResponseSchema,
+    { id: ruleId },
+  );
+
+  // Monarch reports `deleted: false` even when the rule is removed; only errors are reliable.
+  const { errors } = response.deleteTransactionRule;
+  if (errors) {
+    throw MonarchMutationError.fromPayload(errors);
+  }
+  return true;
 }

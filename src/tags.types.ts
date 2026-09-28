@@ -116,3 +116,22 @@ export const SetTransactionTagsInputSchema = z
   })
   .strict();
 export type SetTransactionTagsInput = z.infer<typeof SetTransactionTagsInputSchema>;
+
+export const DeleteTransactionTagInputSchema = z
+  .object({
+    tagId: z.string().min(1),
+  })
+  .strict();
+export type DeleteTransactionTagInput = z.infer<typeof DeleteTransactionTagInputSchema>;
+
+export const DeleteTransactionTagResponseSchema = z
+  .object({
+    deleteTransactionTag: z
+      .object({
+        errors: MutationErrorSchema.nullable(),
+        __typename: z.string().optional(),
+      })
+      .strict(),
+  })
+  .strict();
+export type DeleteTransactionTagResponse = z.infer<typeof DeleteTransactionTagResponseSchema>;

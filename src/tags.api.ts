@@ -4,6 +4,9 @@ import type { MonarchGraphQLClient } from './graphql.js';
 import { MonarchMutationError } from './common.types.js';
 import {
   CreateTransactionTagResponseSchema,
+  DeleteTransactionTagResponseSchema,
+  type DeleteTransactionTagInput,
+  type DeleteTransactionTagResponse,
   GetTransactionTagsResponseSchema,
   SetTransactionTagsResponseSchema,
   TRANSACTION_TAG_FIELDS,
@@ -150,4 +153,49 @@ export async function setTransactionTags(
     throw new MonarchMutationError('Setting tags failed: no transaction returned', null, []);
   }
   return transaction;
+}
+
+/**
+ * Delete a transaction tag. The tag is removed from every transaction that has it.
+ *
+ * @example
+ * ```typescript
+ * await deleteTransactionTag(auth, client, { tagId: 'TAG_ID' });
+ * ```
+ */
+export async function deleteTransactionTag(
+  auth: AuthProvider,
+  client: MonarchGraphQLClient,
+  input: DeleteTransactionTagInput,
+): Promise<true> {
+  const mutation = gql`
+    mutation Common_DeleteHouseholdTransactionTag($tagId: ID!) {
+      deleteTransactionTag(tagId: $tagId) {
+        errors {
+          fieldErrors {
+            field
+            messages
+            __typename
+          }
+          message
+          code
+          __typename
+        }
+        __typename
+      }
+    }
+  `;
+
+  const response = await client.request<DeleteTransactionTagResponse>(
+    mutation,
+    auth,
+    DeleteTransactionTagResponseSchema,
+    { tagId: input.tagId },
+  );
+
+  const { errors } = response.deleteTransactionTag;
+  if (errors) {
+    throw MonarchMutationError.fromPayload(errors);
+  }
+  return true;
 }

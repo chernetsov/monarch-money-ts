@@ -6,26 +6,26 @@
 
 This library covers a subset of Monarch Money's GraphQL API. When adding new functionality, check what's already implemented and what gaps remain.
 
-**Implemented (30 functions across 9 domains):**
+**Implemented (33 functions across 9 domains):**
 
-| Domain       | Functions                                                                                                           | File                  |
-| ------------ | ------------------------------------------------------------------------------------------------------------------- | --------------------- |
-| Accounts     | `getAccounts`, `requestAccountsRefresh`, `getAccountsRefreshStatus`, `isAccountsRefreshComplete`, `refreshAccounts` | `accounts.api.ts`     |
-| Transactions | `getTransactions`, `getTransaction`, `updateTransaction`, `getTransactionSplits`, `updateTransactionSplits`         | `transactions.api.ts` |
-| Tags         | `getTransactionTags`, `createTransactionTag`, `setTransactionTags`                                                  | `tags.api.ts`         |
-| Categories   | `getBudgetCategories`, `getBudgetCategoryGroups`, `getBudgetCategory`, `createCategory`, `restoreCategory`          | `categories.api.ts`   |
-| Budgets      | `getBudgetReport`, `getBudgetStatus`, `getBudgetSettings`, `setBudgetAmount`                                        | `budget.api.ts`       |
-| Cash Flow    | `getCashflow`, `getCashflowSummary`                                                                                 | `cashflow.api.ts`     |
-| Portfolio    | `getPortfolio`                                                                                                      | `portfolio.api.ts`    |
-| Rules        | `getTransactionRules`, `previewTransactionRule`, `createTransactionRule`                                            | `rules.api.ts`        |
-| Recurring    | `getRecurringTransactionStreams`, `getAggregatedRecurringItems`                                                     | `recurring.api.ts`    |
+| Domain       | Functions                                                                                                                    | File                  |
+| ------------ | ---------------------------------------------------------------------------------------------------------------------------- | --------------------- |
+| Accounts     | `getAccounts`, `requestAccountsRefresh`, `getAccountsRefreshStatus`, `isAccountsRefreshComplete`, `refreshAccounts`          | `accounts.api.ts`     |
+| Transactions | `getTransactions`, `getTransaction`, `updateTransaction`, `getTransactionSplits`, `updateTransactionSplits`                  | `transactions.api.ts` |
+| Tags         | `getTransactionTags`, `createTransactionTag`, `setTransactionTags`, `deleteTransactionTag`                                   | `tags.api.ts`         |
+| Categories   | `getBudgetCategories`, `getBudgetCategoryGroups`, `getBudgetCategory`, `createCategory`, `restoreCategory`, `deleteCategory` | `categories.api.ts`   |
+| Budgets      | `getBudgetReport`, `getBudgetStatus`, `getBudgetSettings`, `setBudgetAmount`                                                 | `budget.api.ts`       |
+| Cash Flow    | `getCashflow`, `getCashflowSummary`                                                                                          | `cashflow.api.ts`     |
+| Portfolio    | `getPortfolio`                                                                                                               | `portfolio.api.ts`    |
+| Rules        | `getTransactionRules`, `previewTransactionRule`, `createTransactionRule`, `deleteTransactionRule`                            | `rules.api.ts`        |
+| Recurring    | `getRecurringTransactionStreams`, `getAggregatedRecurringItems`                                                              | `recurring.api.ts`    |
 
 **Not yet implemented (known gaps):**
 
 - **Accounts**: create/update/delete, balance history, snapshots, account types
 - **Transactions**: create, delete, summary/aggregates
-- **Categories**: update, delete
-- **Rules**: update, delete
+- **Categories**: update
+- **Rules**: update
 - **Recurring Transactions**: create/update/delete streams, mark items paid
 - **Institutions**: list connected institutions (entire domain missing)
 - **Subscription**: get subscription details (entire domain missing)
